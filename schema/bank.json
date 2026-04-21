@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/mvdicarlo/osrs-data-exporter/main/schema/bank.json",
+  "title": "Bank Export",
+  "description": "Schema for bank.json produced by the OSRS Data Exporter RuneLite plugin.",
+  "type": "object",
+  "required": ["dataType", "record"],
+  "additionalProperties": false,
+  "properties": {
+    "dataType": {
+      "type": "string",
+      "const": "BANK",
+      "description": "Identifies this payload as a bank snapshot."
+    },
+    "record": {
+      "type": "object",
+      "description": "The bank snapshot record.",
+      "required": ["accountHash", "timestamp", "items"],
+      "additionalProperties": false,
+      "properties": {
+        "accountHash": {
+          "type": "integer",
+          "description": "The unique account hash identifying the player, obtained from the RuneLite client API."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 UTC timestamp of when the snapshot was taken (e.g. '2026-04-21T12:00:00Z')."
+        },
+        "items": {
+          "type": "array",
+          "description": "All non-empty item slots in the bank at the time of the snapshot.",
+          "items": {
+            "$ref": "#/$defs/itemEntry"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "itemEntry": {
+      "title": "ItemEntry",
+      "description": "A single item in the bank snapshot.",
+      "type": "object",
+      "required": ["itemId", "itemName", "quantity", "members", "tradeable", "price"],
+      "additionalProperties": false,
+      "properties": {
+        "itemId": {
+          "type": "integer",
+          "description": "The item's unique ID as defined by the game engine.",
+          "minimum": 1
+        },
+        "itemName": {
+          "type": "string",
+          "description": "The human-readable name of the item, resolved from the item composition cache."
+        },
+        "quantity": {
+          "type": "integer",
+          "description": "The stack size / quantity of this item.",
+          "minimum": 1
+        },
+        "members": {
+          "type": "boolean",
+          "description": "Whether this item is members-only."
+        },
+        "tradeable": {
+          "type": "boolean",
+          "description": "Whether this item can be traded between players on the Grand Exchange or directly."
+        },
+        "price": {
+          "type": "integer",
+          "description": "The base store price of this item in coins. High alch value = floor(price * 0.6). Low alch value = floor(price * 0.4).",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

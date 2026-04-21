@@ -52,12 +52,37 @@ Example `bank.json`:
     "accountHash": 123456789,
     "timestamp": "2026-04-21T12:00:00Z",
     "items": [
-      { "itemId": 4151, "itemName": "Abyssal whip", "quantity": 1 },
-      { "itemId": 995, "itemName": "Coins", "quantity": 50000 }
+      {
+        "itemId": 4151,
+        "itemName": "Abyssal whip",
+        "quantity": 1,
+        "members": true,
+        "tradeable": true,
+        "price": 2560
+      },
+      {
+        "itemId": 995,
+        "itemName": "Coins",
+        "quantity": 50000,
+        "members": false,
+        "tradeable": true,
+        "price": 1
+      }
     ]
   }
 }
 ```
+
+> **Note:** `price` is the base store price in coins. High alch = `floor(price × 0.6)`, low alch = `floor(price × 0.4)`.
+
+### JSON Schemas
+
+Machine-readable JSON Schemas ([draft-07](http://json-schema.org/draft-07/schema)) are provided for all exported files. Use them for validation, IDE autocomplete, or code generation:
+
+| Output File | Schema |
+|---|---|
+| `bank.json` | [schema/bank.json](schema/bank.json) |
+| `inventory.json` | [schema/inventory.json](schema/inventory.json) |
 
 ## Building
 
