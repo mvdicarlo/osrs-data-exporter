@@ -16,6 +16,12 @@ A [RuneLite](https://runelite.net/) plugin that exports OSRS account data to con
 - **Seasonal World Filter** — Automatically disables exports on Leagues, Deadman, Tournament, Fresh Start, and nosave beta worlds
 - **Adapter/Factory Pattern** — Extensible architecture for adding new export targets
 
+## Export Targets
+
+| Target | Status | Description |
+|---|---|---|
+| Local Storage | Available | Writes JSON files to `~/.runelite/osrs-data-exporter/{accountHash}/` |
+
 ## Configuration
 
 Found under the **OSRS Data Exporter** section in RuneLite settings:
