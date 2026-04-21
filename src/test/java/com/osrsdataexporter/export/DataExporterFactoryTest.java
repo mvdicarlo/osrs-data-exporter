@@ -1,0 +1,80 @@
+package com.osrsdataexporter.export;
+
+import com.google.gson.Gson;
+import com.osrsdataexporter.OsrsDataExporterConfig;
+import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+public class DataExporterFactoryTest
+{
+	private OsrsDataExporterConfig config;
+	private Gson gson;
+	private DataExporterFactory factory;
+
+	@Before
+	public void setUp()
+	{
+		config = mock(OsrsDataExporterConfig.class);
+		gson = new Gson();
+		factory = new DataExporterFactory(config, gson);
+	}
+
+	@Test
+	public void init_withLocalStorageEnabled_registersExporter()
+	{
+		when(config.enableLocalStorage()).thenReturn(true);
+
+		factory.init();
+
+		List<DataExporter> exporters = factory.getActiveExporters();
+		assertEquals(1, exporters.size());
+		assertEquals(ExportType.LOCAL_STORAGE, exporters.get(0).getType());
+	}
+
+	@Test
+	public void init_withLocalStorageDisabled_registersNoExporters()
+	{
+		when(config.enableLocalStorage()).thenReturn(false);
+
+		factory.init();
+
+		assertTrue(factory.getActiveExporters().isEmpty());
+	}
+
+	@Test
+	public void init_reinitializes_reflectsNewConfig()
+	{
+		when(config.enableLocalStorage()).thenReturn(true);
+		factory.init();
+		assertEquals(1, factory.getActiveExporters().size());
+
+		when(config.enableLocalStorage()).thenReturn(false);
+		factory.init();
+		assertTrue(factory.getActiveExporters().isEmpty());
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void getActiveExporters_returnsUnmodifiableList()
+	{
+		when(config.enableLocalStorage()).thenReturn(true);
+		factory.init();
+
+		factory.getActiveExporters().clear();
+	}
+
+	@Test
+	public void shutdown_clearsAllExporters()
+	{
+		when(config.enableLocalStorage()).thenReturn(true);
+		factory.init();
+		assertEquals(1, factory.getActiveExporters().size());
+
+		factory.shutdown();
+		assertTrue(factory.getActiveExporters().isEmpty());
+	}
+}
