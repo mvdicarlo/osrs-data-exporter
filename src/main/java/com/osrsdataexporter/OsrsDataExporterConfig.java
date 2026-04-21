@@ -41,6 +41,18 @@ public interface OsrsDataExporterConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "exportInventoryData",
+		name = "Export Inventory Data",
+		description = "Export a snapshot of inventory contents whenever the inventory is updated.",
+		section = dataSourcesSection,
+		position = 1
+	)
+	default boolean exportInventoryData()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "enableLocalStorage",
 		name = "Enable Local Storage",
 		description = "Save exported data as JSON files in the .runelite/osrs-data-exporter directory.",

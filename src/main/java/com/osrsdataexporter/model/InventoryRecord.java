@@ -6,19 +6,19 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 /**
- * A snapshot of all items in a player's bank at a point in time.
+ * A snapshot of all items in a player's inventory at a point in time.
  * Extends {@link ExportRecord} to inherit account and timestamp context.
  */
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class BankRecord extends ExportRecord
+public class InventoryRecord extends ExportRecord
 {
 	/**
-	 * The list of item entries in the bank at the time of the snapshot.
+	 * The list of item entries in the inventory at the time of the snapshot.
 	 */
 	List<ItemEntry> items;
 
-	public BankRecord(long accountHash, Instant timestamp, List<ItemEntry> items)
+	public InventoryRecord(long accountHash, Instant timestamp, List<ItemEntry> items)
 	{
 		super(accountHash, timestamp);
 		this.items = items;

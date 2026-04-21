@@ -4,10 +4,12 @@ import com.google.gson.Gson;
 import com.google.inject.Provides;
 import com.osrsdataexporter.export.DataExporter;
 import com.osrsdataexporter.export.DataExporterFactory;
-import com.osrsdataexporter.model.BankItemEntry;
 import com.osrsdataexporter.model.BankRecord;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
+import com.osrsdataexporter.model.ExportRecord;
+import com.osrsdataexporter.model.InventoryRecord;
+import com.osrsdataexporter.model.ItemEntry;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -44,8 +46,8 @@ import net.runelite.client.plugins.PluginDescriptor;
 @Slf4j
 @PluginDescriptor(
 	name = "OSRS Data Exporter",
-	description = "Exports account data (bank, etc.) to external storage targets.",
-	tags = {"bank", "export", "data"}
+	description = "Exports account data (bank, inventory, etc.) to external storage targets.",
+	tags = {"bank", "inventory", "export", "data"}
 )
 public class OsrsDataExporterPlugin extends Plugin
 {
@@ -76,6 +78,12 @@ public class OsrsDataExporterPlugin extends Plugin
 	 */
 	private ScheduledFuture<?> pendingBankExport;
 
+	/**
+	 * Handle for the currently pending debounced inventory export.
+	 * Cancelled and replaced each time a new inventory change arrives.
+	 */
+	private ScheduledFuture<?> pendingInventoryExport;
+
 	@Override
 	protected void startUp()
 	{
@@ -97,6 +105,12 @@ public class OsrsDataExporterPlugin extends Plugin
 		{
 			pendingBankExport.cancel(false);
 			pendingBankExport = null;
+		}
+
+		if (pendingInventoryExport != null)
+		{
+			pendingInventoryExport.cancel(false);
+			pendingInventoryExport = null;
 		}
 
 		if (exporterFactory != null)
@@ -130,6 +144,10 @@ public class OsrsDataExporterPlugin extends Plugin
 		{
 			handleBankChange(event.getItemContainer());
 		}
+		else if (event.getContainerId() == InventoryID.INV)
+		{
+			handleInventoryChange(event.getItemContainer());
+		}
 	}
 
 	/**
@@ -151,7 +169,29 @@ public class OsrsDataExporterPlugin extends Plugin
 		}
 
 		ExportPayload<BankRecord> payload = snapshotBankData(accountHash, container);
-		scheduleDebouncedExport(payload);
+		pendingBankExport = scheduleDebouncedExport(pendingBankExport, payload, "Bank");
+	}
+
+	/**
+	 * Handles an inventory container change by snapshotting data and scheduling
+	 * a debounced export. Guards against disabled config, seasonal worlds,
+	 * and unauthenticated sessions.
+	 */
+	private void handleInventoryChange(ItemContainer container)
+	{
+		if (!shouldExportInventoryData())
+		{
+			return;
+		}
+
+		long accountHash = client.getAccountHash();
+		if (accountHash == -1)
+		{
+			return;
+		}
+
+		ExportPayload<InventoryRecord> payload = snapshotInventoryData(accountHash, container);
+		pendingInventoryExport = scheduleDebouncedExport(pendingInventoryExport, payload, "Inventory");
 	}
 
 	/**
@@ -162,6 +202,16 @@ public class OsrsDataExporterPlugin extends Plugin
 	private boolean shouldExportBankData()
 	{
 		return config.exportBankData() && !isSeasonalWorld();
+	}
+
+	/**
+	 * Checks whether inventory data export is currently enabled and allowed.
+	 *
+	 * @return true if inventory export is enabled and the world is not seasonal
+	 */
+	private boolean shouldExportInventoryData()
+	{
+		return config.exportInventoryData() && !isSeasonalWorld();
 	}
 
 	/**
@@ -177,22 +227,41 @@ public class OsrsDataExporterPlugin extends Plugin
 	{
 		Item[] items = container.getItems();
 		Instant timestamp = Instant.now();
-		List<BankItemEntry> entries = buildBankEntries(items);
+		List<ItemEntry> entries = buildItemEntries(items);
 
 		BankRecord record = new BankRecord(accountHash, timestamp, entries);
 		return new ExportPayload<>(DataType.BANK, record);
 	}
 
 	/**
-	 * Converts raw bank items into a list of {@link BankItemEntry} records,
+	 * Snapshots the current inventory contents into an export payload.
+	 * Must be called on the client thread where item composition lookups
+	 * are safe and essentially free (in-memory cache hits).
+	 *
+	 * @param accountHash the player's account hash
+	 * @param container   the inventory item container
+	 * @return a payload ready for dispatch to exporters
+	 */
+	private ExportPayload<InventoryRecord> snapshotInventoryData(long accountHash, ItemContainer container)
+	{
+		Item[] items = container.getItems();
+		Instant timestamp = Instant.now();
+		List<ItemEntry> entries = buildItemEntries(items);
+
+		InventoryRecord record = new InventoryRecord(accountHash, timestamp, entries);
+		return new ExportPayload<>(DataType.INVENTORY, record);
+	}
+
+	/**
+	 * Converts raw items into a list of {@link ItemEntry} records,
 	 * resolving item names from the composition cache.
 	 *
-	 * @param items the raw items from the bank container
-	 * @return list of bank item entries, excluding empty slots
+	 * @param items the raw items from an item container
+	 * @return list of item entries, excluding empty slots
 	 */
-	private List<BankItemEntry> buildBankEntries(Item[] items)
+	private List<ItemEntry> buildItemEntries(Item[] items)
 	{
-		List<BankItemEntry> entries = new ArrayList<>(items.length);
+		List<ItemEntry> entries = new ArrayList<>(items.length);
 
 		for (Item item : items)
 		{
@@ -205,7 +274,7 @@ public class OsrsDataExporterPlugin extends Plugin
 			}
 
 			ItemComposition composition = client.getItemDefinition(id);
-			entries.add(new BankItemEntry(id, composition.getName(), quantity));
+			entries.add(new ItemEntry(id, composition.getName(), quantity));
 		}
 
 		return entries;
@@ -215,22 +284,29 @@ public class OsrsDataExporterPlugin extends Plugin
 	 * Schedules a debounced export, cancelling any previously pending one.
 	 * The actual I/O runs on the background executor after the debounce window.
 	 *
-	 * @param payload the export payload to dispatch
+	 * @param pendingFuture the current pending future to cancel, or null
+	 * @param payload       the export payload to dispatch
+	 * @param label         a human-readable label for logging (e.g. "Bank", "Inventory")
+	 * @return the newly scheduled future
 	 */
-	private void scheduleDebouncedExport(ExportPayload<BankRecord> payload)
+	private ScheduledFuture<?> scheduleDebouncedExport(
+		ScheduledFuture<?> pendingFuture,
+		ExportPayload<? extends ExportRecord> payload,
+		String label)
 	{
-		if (pendingBankExport != null)
+		if (pendingFuture != null)
 		{
-			pendingBankExport.cancel(false);
+			pendingFuture.cancel(false);
 		}
 
-		pendingBankExport = executor.schedule(
+		ScheduledFuture<?> future = executor.schedule(
 			() -> dispatchExport(payload),
 			DEBOUNCE_DELAY_MS,
 			TimeUnit.MILLISECONDS
 		);
 
-		log.debug("Bank change detected, export scheduled (debounce {}ms)", DEBOUNCE_DELAY_MS);
+		log.debug("{} change detected, export scheduled (debounce {}ms)", label, DEBOUNCE_DELAY_MS);
+		return future;
 	}
 
 	/**
@@ -254,7 +330,7 @@ public class OsrsDataExporterPlugin extends Plugin
 	 * Dispatches the payload to all active exporters.
 	 * Runs on the background executor thread — never on the client thread.
 	 */
-	private void dispatchExport(ExportPayload<BankRecord> payload)
+	private void dispatchExport(ExportPayload<? extends ExportRecord> payload)
 	{
 		List<DataExporter> exporters = exporterFactory.getActiveExporters();
 		if (exporters.isEmpty())

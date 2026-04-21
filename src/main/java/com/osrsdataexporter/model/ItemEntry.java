@@ -3,12 +3,11 @@ package com.osrsdataexporter.model;
 import lombok.Value;
 
 /**
- * Represents a single item entry in a bank snapshot.
- * Each entry captures the item's identity, name, quantity, and category
- * at the time the bank was read.
+ * Represents a single item entry in an item container snapshot.
+ * Used for both bank and inventory exports.
  */
 @Value
-public class BankItemEntry
+public class ItemEntry
 {
 	/**
 	 * The item's unique ID as defined by the game engine.
@@ -21,7 +20,7 @@ public class BankItemEntry
 	String itemName;
 
 	/**
-	 * The stack size / quantity of this item in the bank.
+	 * The stack size / quantity of this item.
 	 */
 	int quantity;
 }

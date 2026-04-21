@@ -5,10 +5,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
-import com.osrsdataexporter.model.BankItemEntry;
+import com.osrsdataexporter.model.ItemEntry;
 import com.osrsdataexporter.model.BankRecord;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
+import com.osrsdataexporter.model.InventoryRecord;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -55,7 +56,7 @@ public class LocalStorageExporterTest
 	public void export_createsDirectoryAndWritesFile() throws IOException
 	{
 		ExportPayload<BankRecord> payload = buildPayload(Collections.singletonList(
-			new BankItemEntry(4151, "Abyssal whip", 1)
+			new ItemEntry(4151, "Abyssal whip", 1)
 		));
 
 		exporter.export(payload);
@@ -71,8 +72,8 @@ public class LocalStorageExporterTest
 	public void export_writesCorrectJsonStructure() throws IOException
 	{
 		ExportPayload<BankRecord> payload = buildPayload(Arrays.asList(
-			new BankItemEntry(4151, "Abyssal whip", 1),
-			new BankItemEntry(995, "Coins", 50000)
+			new ItemEntry(4151, "Abyssal whip", 1),
+			new ItemEntry(995, "Coins", 50000)
 		));
 
 		exporter.export(payload);
@@ -90,7 +91,7 @@ public class LocalStorageExporterTest
 	public void export_writesCorrectItemData() throws IOException
 	{
 		ExportPayload<BankRecord> payload = buildPayload(Collections.singletonList(
-			new BankItemEntry(4151, "Abyssal whip", 3)
+			new ItemEntry(4151, "Abyssal whip", 3)
 		));
 
 		exporter.export(payload);
@@ -110,12 +111,12 @@ public class LocalStorageExporterTest
 	public void export_overwritesExistingFile() throws IOException
 	{
 		ExportPayload<BankRecord> firstPayload = buildPayload(Collections.singletonList(
-			new BankItemEntry(4151, "Abyssal whip", 1)
+			new ItemEntry(4151, "Abyssal whip", 1)
 		));
 		exporter.export(firstPayload);
 
 		ExportPayload<BankRecord> secondPayload = buildPayload(Collections.singletonList(
-			new BankItemEntry(995, "Coins", 99999)
+			new ItemEntry(995, "Coins", 99999)
 		));
 		exporter.export(secondPayload);
 
@@ -165,15 +166,74 @@ public class LocalStorageExporterTest
 		assertEquals("bank.json", outputFile.getName());
 	}
 
-	private ExportPayload<BankRecord> buildPayload(java.util.List<BankItemEntry> items)
+	@Test
+	public void export_inventoryWritesCorrectFile() throws IOException
+	{
+		ExportPayload<InventoryRecord> payload = buildInventoryPayload(Arrays.asList(
+			new ItemEntry(4151, "Abyssal whip", 1),
+			new ItemEntry(385, "Shark", 10)
+		));
+
+		exporter.export(payload);
+
+		File outputFile = expectedInventoryOutputFile();
+		assertTrue("Inventory output file should exist", outputFile.exists());
+		assertEquals("inventory.json", outputFile.getName());
+
+		String json = new String(Files.readAllBytes(outputFile.toPath()), StandardCharsets.UTF_8);
+		JsonObject root = gson.fromJson(json, JsonObject.class);
+
+		assertEquals("INVENTORY", root.get("dataType").getAsString());
+		JsonObject record = root.getAsJsonObject("record");
+		assertEquals(ACCOUNT_HASH, record.get("accountHash").getAsLong());
+		assertEquals(2, record.getAsJsonArray("items").size());
+	}
+
+	@Test
+	public void export_inventoryAndBankWriteSeparateFiles() throws IOException
+	{
+		exporter.export(buildPayload(Collections.singletonList(
+			new ItemEntry(995, "Coins", 50000)
+		)));
+		exporter.export(buildInventoryPayload(Collections.singletonList(
+			new ItemEntry(4151, "Abyssal whip", 1)
+		)));
+
+		assertTrue("Bank file should exist", expectedOutputFile().exists());
+		assertTrue("Inventory file should exist", expectedInventoryOutputFile().exists());
+
+		String bankJson = new String(Files.readAllBytes(expectedOutputFile().toPath()), StandardCharsets.UTF_8);
+		String invJson = new String(Files.readAllBytes(expectedInventoryOutputFile().toPath()), StandardCharsets.UTF_8);
+
+		assertEquals(995, gson.fromJson(bankJson, JsonObject.class)
+			.getAsJsonObject("record").getAsJsonArray("items")
+			.get(0).getAsJsonObject().get("itemId").getAsInt());
+		assertEquals(4151, gson.fromJson(invJson, JsonObject.class)
+			.getAsJsonObject("record").getAsJsonArray("items")
+			.get(0).getAsJsonObject().get("itemId").getAsInt());
+	}
+
+	private ExportPayload<BankRecord> buildPayload(java.util.List<ItemEntry> items)
 	{
 		BankRecord record = new BankRecord(ACCOUNT_HASH, TIMESTAMP, items);
 		return new ExportPayload<>(DataType.BANK, record);
+	}
+
+	private ExportPayload<InventoryRecord> buildInventoryPayload(java.util.List<ItemEntry> items)
+	{
+		InventoryRecord record = new InventoryRecord(ACCOUNT_HASH, TIMESTAMP, items);
+		return new ExportPayload<>(DataType.INVENTORY, record);
 	}
 
 	private File expectedOutputFile()
 	{
 		return new File(tempFolder.getRoot(),
 			"osrs-data-exporter" + File.separator + ACCOUNT_HASH + File.separator + "bank.json");
+	}
+
+	private File expectedInventoryOutputFile()
+	{
+		return new File(tempFolder.getRoot(),
+			"osrs-data-exporter" + File.separator + ACCOUNT_HASH + File.separator + "inventory.json");
 	}
 }
