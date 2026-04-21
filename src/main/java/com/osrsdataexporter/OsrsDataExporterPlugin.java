@@ -274,7 +274,8 @@ public class OsrsDataExporterPlugin extends Plugin
 			}
 
 			ItemComposition composition = client.getItemDefinition(id);
-			entries.add(new ItemEntry(id, composition.getName(), quantity));
+			entries.add(new ItemEntry(id, composition.getName(), quantity,
+				composition.isMembers(), composition.isTradeable(), composition.getPrice()));
 		}
 
 		return entries;
