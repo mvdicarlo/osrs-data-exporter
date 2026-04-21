@@ -35,13 +35,13 @@ import net.runelite.client.plugins.PluginDescriptor;
 /**
  * OSRS Data Exporter plugin.
  *
- * <p>Captures account data (starting with bank contents) and exports it
+ * <p>Captures account data (bank and inventory contents) and exports it
  * to configurable targets via the adapter/factory pattern. All export I/O
  * is performed off the client thread to avoid any impact on game performance.</p>
  *
- * <p>Bank exports are smart-debounced: rapid item container changes (e.g.
+ * <p>Exports are smart-debounced: rapid item container changes (e.g.
  * depositing multiple items quickly) are coalesced into a single export
- * after a configurable quiet period.</p>
+ * after a quiet period. Bank and inventory each have independent debounce timers.</p>
  */
 @Slf4j
 @PluginDescriptor(
@@ -52,7 +52,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 public class OsrsDataExporterPlugin extends Plugin
 {
 	/**
-	 * Debounce delay in milliseconds. After the last bank change event,
+	 * Debounce delay in milliseconds. After the last container change event,
 	 * the export will wait this long before executing. If another change
 	 * arrives within this window, the timer resets.
 	 */
@@ -254,7 +254,7 @@ public class OsrsDataExporterPlugin extends Plugin
 
 	/**
 	 * Converts raw items into a list of {@link ItemEntry} records,
-	 * resolving item names from the composition cache.
+	 * resolving composition data (name, members, tradeable, price) from the cache.
 	 *
 	 * @param items the raw items from an item container
 	 * @return list of item entries, excluding empty slots

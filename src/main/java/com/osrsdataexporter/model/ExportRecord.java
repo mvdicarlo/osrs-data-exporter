@@ -2,14 +2,18 @@ package com.osrsdataexporter.model;
 
 import java.time.Instant;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 /**
  * Abstract base class for all exportable records.
  * Every record is associated with an account (via accountHash) and carries
  * a consistent timestamp representing when the export action was triggered.
  */
-@Data
+@Getter
+@EqualsAndHashCode
+@ToString
 @AllArgsConstructor
 public abstract class ExportRecord
 {

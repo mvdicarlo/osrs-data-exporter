@@ -13,8 +13,7 @@ import lombok.extern.slf4j.Slf4j;
  * Factory responsible for creating and managing {@link DataExporter} instances.
  *
  * <p>Maintains a registry of active exporters keyed by {@link ExportType}.
- * Exporters are initialized based on plugin configuration and can be
- * refreshed when config changes.</p>
+ * Exporters are initialized based on plugin configuration.</p>
  */
 @Slf4j
 public class DataExporterFactory
@@ -31,7 +30,7 @@ public class DataExporterFactory
 
 	/**
 	 * Initializes exporters based on the current plugin configuration.
-	 * Should be called on plugin startup and whenever config changes.
+	 * Should be called on plugin startup.
 	 */
 	public void init()
 	{
