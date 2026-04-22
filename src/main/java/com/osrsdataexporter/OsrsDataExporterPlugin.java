@@ -8,7 +8,6 @@ import com.osrsdataexporter.datasource.GroupStorageDataSource;
 import com.osrsdataexporter.datasource.InventoryDataSource;
 import com.osrsdataexporter.datasource.ItemContainerDataSource;
 import com.osrsdataexporter.datasource.SkillsDataSource;
-import com.osrsdataexporter.event.OsrsDataExportEvent;
 import com.osrsdataexporter.export.DataExporter;
 import com.osrsdataexporter.export.DataExporterFactory;
 import com.osrsdataexporter.model.DataType;
@@ -17,7 +16,6 @@ import com.osrsdataexporter.model.ExportRecord;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +29,6 @@ import net.runelite.api.events.StatChanged;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.events.ConfigChanged;
-import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -65,9 +62,6 @@ public class OsrsDataExporterPlugin extends Plugin
 
 	@Inject
 	private Gson gson;
-
-	@Inject
-	private EventBus eventBus;
 
 	@Inject
 	private ClientThread clientThread;
@@ -245,22 +239,6 @@ public class OsrsDataExporterPlugin extends Plugin
 				log.error("Exporter {} failed", exporter.getType(), e);
 				notifyExportFailure(exporter, e);
 			}
-		}
-
-		try
-		{
-			@SuppressWarnings("unchecked")
-			Map<String, Object> data = gson.fromJson(gson.toJsonTree(payload), Map.class);
-			OsrsDataExportEvent event = new OsrsDataExportEvent(
-				payload.getDataType().getIdentifier(),
-				payload.getRecord().getAccountHash(),
-				data
-			);
-			eventBus.post(event);
-		}
-		catch (Exception e)
-		{
-			log.error("Failed to post export event for {}", payload.getDataType().getIdentifier(), e);
 		}
 	}
 

@@ -18,7 +18,6 @@ A [RuneLite](https://runelite.net/) plugin that exports OSRS account data to con
 - **Smart Debounce** — Rapid changes are coalesced into a single export (2s for items, 5s for skills)
 - **Seasonal World Filter** — Automatically disables exports on Leagues, Deadman, Tournament, Fresh Start, and nosave beta worlds
 - **Adapter/Factory Pattern** — Extensible architecture for adding new export targets
-- **Cross-Plugin Events** — Posts `OsrsDataExportEvent` to RuneLite's EventBus after each export (JDK types only, no dependency required)
 
 ## Export Targets
 
@@ -97,28 +96,6 @@ Machine-readable JSON Schemas ([draft-07](http://json-schema.org/draft-07/schema
 | `inventory.json` | [schema/inventory.json](schema/inventory.json) |
 | `group-storage.json` | [schema/group-storage.json](schema/group-storage.json) |
 | `skills.json` | [schema/skills.json](schema/skills.json) |
-
-## Cross-Plugin Event
-
-After each successful export, an `OsrsDataExportEvent` is posted to RuneLite's `EventBus`. The event uses only JDK types — no compile-time dependency on this plugin is needed.
-
-```java
-@Subscribe
-public void onOsrsDataExportEvent(OsrsDataExportEvent event)
-{
-    String dataType = event.getDataType();       // "bank", "inventory", "skills", "group-storage"
-    long accountHash = event.getAccountHash();
-    Map<String, Object> data = event.getData();  // mirrors the JSON structure
-}
-```
-
-| Field | Type | Description |
-|---|---|---|
-| `dataType` | `String` | Data type identifier (e.g. `"bank"`, `"skills"`) |
-| `accountHash` | `long` | The player's account hash |
-| `data` | `Map<String, Object>` | The exported payload as a plain map (same structure as the JSON) |
-
-> **Note:** The event fires on the background export thread, not the client thread. Use `ClientThread.invokeLater()` if you need client-thread access.
 
 ## Building
 
