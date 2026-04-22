@@ -182,7 +182,7 @@ public class OsrsDataExporterPlugin extends Plugin
 
 		for (DataSourceHandler<?> handler : dataSources)
 		{
-			if (handler.canHandle(event))
+			if (handler.isEnabled() && handler.canHandle(event))
 			{
 				handler.handleEvent(event, account, executor, this::dispatchExport);
 				return;

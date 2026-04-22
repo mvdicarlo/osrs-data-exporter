@@ -54,11 +54,6 @@ public abstract class ItemContainerDataSource<T extends ExportRecord> extends Da
 		ScheduledExecutorService executor,
 		Consumer<ExportPayload<? extends ExportRecord>> dispatcher)
 	{
-		if (!isEnabled())
-		{
-			return;
-		}
-
 		ItemContainer container = ((ItemContainerChanged) event).getItemContainer();
 		if (container == null)
 		{

@@ -53,11 +53,6 @@ public class SkillsDataSource extends DataSourceHandler<SkillsRecord>
 		ScheduledExecutorService executor,
 		Consumer<ExportPayload<? extends ExportRecord>> dispatcher)
 	{
-		if (!isEnabled())
-		{
-			return;
-		}
-
 		if (!hasXpChanged((StatChanged) event))
 		{
 			return;
