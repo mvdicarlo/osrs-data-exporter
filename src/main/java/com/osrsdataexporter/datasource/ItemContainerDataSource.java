@@ -1,5 +1,6 @@
 package com.osrsdataexporter.datasource;
 
+import com.osrsdataexporter.OsrsDataExporterConfig;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
 import com.osrsdataexporter.model.ExportRecord;
@@ -21,12 +22,9 @@ import net.runelite.api.ItemContainer;
  */
 public abstract class ItemContainerDataSource<T extends ExportRecord> extends DataSourceHandler<T>
 {
-	protected final Client client;
-
-	protected ItemContainerDataSource(Client client, DataType dataType, long debounceDelayMs)
+	protected ItemContainerDataSource(Client client, OsrsDataExporterConfig config, DataType dataType, long debounceDelayMs)
 	{
-		super(dataType, debounceDelayMs);
-		this.client = client;
+		super(client, config, dataType, debounceDelayMs);
 	}
 
 	/**

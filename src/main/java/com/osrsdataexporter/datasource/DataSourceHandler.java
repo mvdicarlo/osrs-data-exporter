@@ -1,5 +1,6 @@
 package com.osrsdataexporter.datasource;
 
+import com.osrsdataexporter.OsrsDataExporterConfig;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
 import com.osrsdataexporter.model.ExportRecord;
@@ -8,6 +9,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Client;
 
 /**
  * Abstract base for data source handlers. Each handler encapsulates
@@ -18,12 +20,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class DataSourceHandler<T extends ExportRecord>
 {
+	protected final Client client;
+	protected final OsrsDataExporterConfig config;
 	private final DataType dataType;
 	private final long debounceDelayMs;
 	private ScheduledFuture<?> pendingExport;
 
-	protected DataSourceHandler(DataType dataType, long debounceDelayMs)
+	protected DataSourceHandler(Client client, OsrsDataExporterConfig config, DataType dataType, long debounceDelayMs)
 	{
+		this.client = client;
+		this.config = config;
 		this.dataType = dataType;
 		this.debounceDelayMs = debounceDelayMs;
 	}

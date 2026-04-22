@@ -9,6 +9,7 @@ import com.osrsdataexporter.model.ItemEntry;
 import com.osrsdataexporter.model.BankRecord;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
+import com.osrsdataexporter.model.GroupStorageRecord;
 import com.osrsdataexporter.model.InventoryRecord;
 import com.osrsdataexporter.model.SkillEntry;
 import com.osrsdataexporter.model.SkillsRecord;
@@ -293,5 +294,64 @@ public class LocalStorageExporterTest
 	{
 		return new File(tempFolder.getRoot(),
 			"osrs-data-exporter" + File.separator + ACCOUNT_HASH + File.separator + "inventory.json");
+	}
+
+	private File expectedGroupStorageOutputFile()
+	{
+		return new File(tempFolder.getRoot(),
+			"osrs-data-exporter" + File.separator + ACCOUNT_HASH + File.separator + "group-storage.json");
+	}
+
+	private ExportPayload<GroupStorageRecord> buildGroupStoragePayload(java.util.List<ItemEntry> items)
+	{
+		GroupStorageRecord record = new GroupStorageRecord(ACCOUNT_HASH, TIMESTAMP, items);
+		return new ExportPayload<>(DataType.GROUP_STORAGE, record);
+	}
+
+	@Test
+	public void export_groupStorageWritesCorrectFile() throws IOException
+	{
+		ExportPayload<GroupStorageRecord> payload = buildGroupStoragePayload(Arrays.asList(
+			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560),
+			new ItemEntry(385, "Shark", 25, true, true, 200)
+		));
+
+		exporter.export(payload);
+
+		File outputFile = expectedGroupStorageOutputFile();
+		assertTrue("Group storage output file should exist", outputFile.exists());
+		assertEquals("group-storage.json", outputFile.getName());
+
+		String json = new String(Files.readAllBytes(outputFile.toPath()), StandardCharsets.UTF_8);
+		JsonObject root = gson.fromJson(json, JsonObject.class);
+
+		assertEquals("GROUP_STORAGE", root.get("dataType").getAsString());
+		JsonObject record = root.getAsJsonObject("record");
+		assertEquals(ACCOUNT_HASH, record.get("accountHash").getAsLong());
+		assertEquals(2, record.getAsJsonArray("items").size());
+	}
+
+	@Test
+	public void export_groupStorageWritesSeparateFromBank() throws IOException
+	{
+		exporter.export(buildPayload(Collections.singletonList(
+			new ItemEntry(995, "Coins", 50000, false, true, 1)
+		)));
+		exporter.export(buildGroupStoragePayload(Collections.singletonList(
+			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560)
+		)));
+
+		assertTrue("Bank file should exist", expectedOutputFile().exists());
+		assertTrue("Group storage file should exist", expectedGroupStorageOutputFile().exists());
+
+		String bankJson = new String(Files.readAllBytes(expectedOutputFile().toPath()), StandardCharsets.UTF_8);
+		String gsJson = new String(Files.readAllBytes(expectedGroupStorageOutputFile().toPath()), StandardCharsets.UTF_8);
+
+		assertEquals(995, gson.fromJson(bankJson, JsonObject.class)
+			.getAsJsonObject("record").getAsJsonArray("items")
+			.get(0).getAsJsonObject().get("itemId").getAsInt());
+		assertEquals(4151, gson.fromJson(gsJson, JsonObject.class)
+			.getAsJsonObject("record").getAsJsonArray("items")
+			.get(0).getAsJsonObject().get("itemId").getAsInt());
 	}
 }

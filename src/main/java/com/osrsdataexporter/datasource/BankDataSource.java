@@ -15,14 +15,9 @@ import net.runelite.api.ItemContainer;
  */
 public class BankDataSource extends ItemContainerDataSource<BankRecord>
 {
-	private static final long DEBOUNCE_DELAY_MS = 2000;
-
-	private final OsrsDataExporterConfig config;
-
 	public BankDataSource(Client client, OsrsDataExporterConfig config)
 	{
-		super(client, DataType.BANK, DEBOUNCE_DELAY_MS);
-		this.config = config;
+		super(client, config, DataType.BANK, 2000);
 	}
 
 	@Override

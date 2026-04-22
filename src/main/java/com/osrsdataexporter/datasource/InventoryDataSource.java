@@ -15,14 +15,9 @@ import net.runelite.api.ItemContainer;
  */
 public class InventoryDataSource extends ItemContainerDataSource<InventoryRecord>
 {
-	private static final long DEBOUNCE_DELAY_MS = 2000;
-
-	private final OsrsDataExporterConfig config;
-
 	public InventoryDataSource(Client client, OsrsDataExporterConfig config)
 	{
-		super(client, DataType.INVENTORY, DEBOUNCE_DELAY_MS);
-		this.config = config;
+		super(client, config, DataType.INVENTORY, 2000);
 	}
 
 	@Override

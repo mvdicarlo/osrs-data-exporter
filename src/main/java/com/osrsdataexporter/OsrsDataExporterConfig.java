@@ -65,6 +65,18 @@ public interface OsrsDataExporterConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "exportGroupStorageData",
+		name = "Export Group Storage Data",
+		description = "Export a snapshot of Group Ironman shared storage whenever it is updated.",
+		section = dataSourcesSection,
+		position = 3
+	)
+	default boolean exportGroupStorageData()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "enableLocalStorage",
 		name = "Enable Local Storage",
 		description = "Save exported data as JSON files in the .runelite/osrs-data-exporter directory.",

@@ -20,16 +20,9 @@ import net.runelite.api.Skill;
  */
 public class SkillsDataSource extends DataSourceHandler<SkillsRecord>
 {
-	private static final long DEBOUNCE_DELAY_MS = 5000;
-
-	private final Client client;
-	private final OsrsDataExporterConfig config;
-
 	public SkillsDataSource(Client client, OsrsDataExporterConfig config)
 	{
-		super(DataType.SKILLS, DEBOUNCE_DELAY_MS);
-		this.client = client;
-		this.config = config;
+		super(client, config, DataType.SKILLS, 5000);
 	}
 
 	@Override

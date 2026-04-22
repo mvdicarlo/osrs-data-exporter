@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Provides;
 import com.osrsdataexporter.datasource.BankDataSource;
 import com.osrsdataexporter.datasource.DataSourceHandler;
+import com.osrsdataexporter.datasource.GroupStorageDataSource;
 import com.osrsdataexporter.datasource.InventoryDataSource;
 import com.osrsdataexporter.datasource.SkillsDataSource;
 import com.osrsdataexporter.export.DataExporter;
@@ -40,8 +41,8 @@ import net.runelite.client.plugins.PluginDescriptor;
 @Slf4j
 @PluginDescriptor(
 	name = "OSRS Data Exporter",
-	description = "Exports account data (bank, inventory, skills, etc.) to external storage targets.",
-	tags = {"bank", "inventory", "skills", "export", "data"}
+	description = "Exports account data (bank, inventory, skills, group storage, etc.) to external storage targets.",
+	tags = {"bank", "inventory", "skills", "group ironman", "export", "data"}
 )
 public class OsrsDataExporterPlugin extends Plugin
 {
@@ -62,6 +63,7 @@ public class OsrsDataExporterPlugin extends Plugin
 	private final List<DataSourceHandler<?>> dataSources = new ArrayList<>();
 	private BankDataSource bankDataSource;
 	private InventoryDataSource inventoryDataSource;
+	private GroupStorageDataSource groupStorageDataSource;
 	private SkillsDataSource skillsDataSource;
 
 	@Override
@@ -79,9 +81,11 @@ public class OsrsDataExporterPlugin extends Plugin
 
 		bankDataSource = new BankDataSource(client, config);
 		inventoryDataSource = new InventoryDataSource(client, config);
+		groupStorageDataSource = new GroupStorageDataSource(client, config);
 		skillsDataSource = new SkillsDataSource(client, config);
 		dataSources.add(bankDataSource);
 		dataSources.add(inventoryDataSource);
+		dataSources.add(groupStorageDataSource);
 		dataSources.add(skillsDataSource);
 
 		log.info("OSRS Data Exporter started");
@@ -94,6 +98,7 @@ public class OsrsDataExporterPlugin extends Plugin
 		dataSources.clear();
 		bankDataSource = null;
 		inventoryDataSource = null;
+		groupStorageDataSource = null;
 		skillsDataSource = null;
 
 		if (exporterFactory != null)
@@ -139,6 +144,11 @@ public class OsrsDataExporterPlugin extends Plugin
 		else if (event.getContainerId() == InventoryID.INV)
 		{
 			inventoryDataSource.handleContainerChange(
+				event.getItemContainer(), accountHash, executor, this::dispatchExport);
+		}
+		else if (event.getContainerId() == InventoryID.INV_GROUP_TEMP)
+		{
+			groupStorageDataSource.handleContainerChange(
 				event.getItemContainer(), accountHash, executor, this::dispatchExport);
 		}
 	}
