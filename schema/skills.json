@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/mvdicarlo/osrs-data-exporter/main/schema/skills.json",
+  "title": "Skills Export",
+  "description": "Schema for skills.json produced by the OSRS Data Exporter RuneLite plugin.",
+  "type": "object",
+  "required": ["dataType", "record"],
+  "additionalProperties": false,
+  "properties": {
+    "dataType": {
+      "type": "string",
+      "const": "SKILLS",
+      "description": "Identifies this payload as a skills snapshot."
+    },
+    "record": {
+      "type": "object",
+      "description": "The skills snapshot record.",
+      "required": ["accountHash", "timestamp", "skills"],
+      "additionalProperties": false,
+      "properties": {
+        "accountHash": {
+          "type": "integer",
+          "description": "The unique account hash identifying the player, obtained from the RuneLite client API."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 UTC timestamp of when the snapshot was taken (e.g. '2026-04-21T12:00:00Z')."
+        },
+        "skills": {
+          "type": "array",
+          "description": "All skills at the time of the snapshot.",
+          "items": {
+            "$ref": "#/$defs/skillEntry"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "skillEntry": {
+      "title": "SkillEntry",
+      "description": "A single skill in the skills snapshot.",
+      "type": "object",
+      "required": ["skillName", "xp", "level"],
+      "additionalProperties": false,
+      "properties": {
+        "skillName": {
+          "type": "string",
+          "description": "The display name of the skill (e.g. 'Attack', 'Woodcutting')."
+        },
+        "xp": {
+          "type": "integer",
+          "description": "Total accumulated XP in this skill.",
+          "minimum": 0
+        },
+        "level": {
+          "type": "integer",
+          "description": "The real (unmodified) level of this skill (1-99, or up to 120 for skills that support it).",
+          "minimum": 1,
+          "maximum": 120
+        }
+      }
+    }
+  }
+}

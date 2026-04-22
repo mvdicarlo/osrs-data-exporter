@@ -8,7 +8,8 @@ package com.osrsdataexporter.model;
 public enum DataType
 {
 	BANK("bank"),
-	INVENTORY("inventory");
+	INVENTORY("inventory"),
+	SKILLS("skills");
 
 	private final String identifier;
 

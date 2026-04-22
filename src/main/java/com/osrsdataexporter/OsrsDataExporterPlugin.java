@@ -10,6 +10,8 @@ import com.osrsdataexporter.model.ExportPayload;
 import com.osrsdataexporter.model.ExportRecord;
 import com.osrsdataexporter.model.InventoryRecord;
 import com.osrsdataexporter.model.ItemEntry;
+import com.osrsdataexporter.model.SkillEntry;
+import com.osrsdataexporter.model.SkillsRecord;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -24,8 +26,10 @@ import net.runelite.api.Client;
 import net.runelite.api.Item;
 import net.runelite.api.ItemComposition;
 import net.runelite.api.ItemContainer;
+import net.runelite.api.Skill;
 import net.runelite.api.WorldType;
 import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.api.events.StatChanged;
 import net.runelite.api.gameval.InventoryID;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -35,28 +39,33 @@ import net.runelite.client.plugins.PluginDescriptor;
 /**
  * OSRS Data Exporter plugin.
  *
- * <p>Captures account data (bank and inventory contents) and exports it
+ * <p>Captures account data (bank, inventory, and skills) and exports it
  * to configurable targets via the adapter/factory pattern. All export I/O
  * is performed off the client thread to avoid any impact on game performance.</p>
  *
- * <p>Exports are smart-debounced: rapid item container changes (e.g.
- * depositing multiple items quickly) are coalesced into a single export
- * after a quiet period. Bank and inventory each have independent debounce timers.</p>
+ * <p>Exports are smart-debounced: rapid changes are coalesced into a single export
+ * after a quiet period. Bank, inventory, and skills each have independent debounce timers.</p>
  */
 @Slf4j
 @PluginDescriptor(
 	name = "OSRS Data Exporter",
 	description = "Exports account data (bank, inventory, etc.) to external storage targets.",
-	tags = {"bank", "inventory", "export", "data"}
+		tags = {"bank", "inventory", "skills", "export", "data"}
 )
 public class OsrsDataExporterPlugin extends Plugin
 {
 	/**
-	 * Debounce delay in milliseconds. After the last container change event,
-	 * the export will wait this long before executing. If another change
-	 * arrives within this window, the timer resets.
+	 * Debounce delay for item container changes (bank, inventory).
+	 * After the last change event, the export waits this long before executing.
+	 * If another change arrives within this window, the timer resets.
 	 */
 	private static final long DEBOUNCE_DELAY_MS = 2000;
+
+	/**
+	 * Debounce delay for skill changes. Longer than item containers because
+	 * XP ticks fire very rapidly during combat or skilling.
+	 */
+	private static final long SKILLS_DEBOUNCE_DELAY_MS = 5000;
 
 	private static final String EXECUTOR_THREAD_NAME = "osrs-data-exporter";
 
@@ -83,6 +92,12 @@ public class OsrsDataExporterPlugin extends Plugin
 	 * Cancelled and replaced each time a new inventory change arrives.
 	 */
 	private ScheduledFuture<?> pendingInventoryExport;
+
+	/**
+	 * Handle for the currently pending debounced skills export.
+	 * Cancelled and replaced each time a stat change arrives.
+	 */
+	private ScheduledFuture<?> pendingSkillsExport;
 
 	@Override
 	protected void startUp()
@@ -113,6 +128,12 @@ public class OsrsDataExporterPlugin extends Plugin
 			pendingInventoryExport = null;
 		}
 
+		if (pendingSkillsExport != null)
+		{
+			pendingSkillsExport.cancel(false);
+			pendingSkillsExport = null;
+		}
+
 		if (exporterFactory != null)
 		{
 			exporterFactory.shutdown();
@@ -132,6 +153,28 @@ public class OsrsDataExporterPlugin extends Plugin
 	OsrsDataExporterConfig provideConfig(ConfigManager configManager)
 	{
 		return configManager.getConfig(OsrsDataExporterConfig.class);
+	}
+
+	/**
+	 * Handles a skill XP or level change by snapshotting all skills and scheduling
+	 * a debounced export. XP changes fire rapidly, so a longer debounce is used.
+	 */
+	@Subscribe
+	public void onStatChanged(StatChanged event)
+	{
+		if (!shouldExportSkillsData())
+		{
+			return;
+		}
+
+		long accountHash = client.getAccountHash();
+		if (accountHash == -1)
+		{
+			return;
+		}
+
+		ExportPayload<SkillsRecord> payload = snapshotSkillsData(accountHash);
+		pendingSkillsExport = scheduleDebouncedExport(pendingSkillsExport, payload, "Skills", SKILLS_DEBOUNCE_DELAY_MS);
 	}
 
 	/**
@@ -169,7 +212,7 @@ public class OsrsDataExporterPlugin extends Plugin
 		}
 
 		ExportPayload<BankRecord> payload = snapshotBankData(accountHash, container);
-		pendingBankExport = scheduleDebouncedExport(pendingBankExport, payload, "Bank");
+		pendingBankExport = scheduleDebouncedExport(pendingBankExport, payload, "Bank", DEBOUNCE_DELAY_MS);
 	}
 
 	/**
@@ -191,7 +234,7 @@ public class OsrsDataExporterPlugin extends Plugin
 		}
 
 		ExportPayload<InventoryRecord> payload = snapshotInventoryData(accountHash, container);
-		pendingInventoryExport = scheduleDebouncedExport(pendingInventoryExport, payload, "Inventory");
+		pendingInventoryExport = scheduleDebouncedExport(pendingInventoryExport, payload, "Inventory", DEBOUNCE_DELAY_MS);
 	}
 
 	/**
@@ -212,6 +255,16 @@ public class OsrsDataExporterPlugin extends Plugin
 	private boolean shouldExportInventoryData()
 	{
 		return config.exportInventoryData() && !isSeasonalWorld();
+	}
+
+	/**
+	 * Checks whether skills data export is currently enabled and allowed.
+	 *
+	 * @return true if skills export is enabled and the world is not seasonal
+	 */
+	private boolean shouldExportSkillsData()
+	{
+		return config.exportSkillsData() && !isSeasonalWorld();
 	}
 
 	/**
@@ -250,6 +303,42 @@ public class OsrsDataExporterPlugin extends Plugin
 
 		InventoryRecord record = new InventoryRecord(accountHash, timestamp, entries);
 		return new ExportPayload<>(DataType.INVENTORY, record);
+	}
+
+	/**
+	 * Snapshots the current skill levels and XP into an export payload.
+	 * Must be called on the client thread.
+	 *
+	 * @param accountHash the player's account hash
+	 * @return a payload ready for dispatch to exporters
+	 */
+	private ExportPayload<SkillsRecord> snapshotSkillsData(long accountHash)
+	{
+		Instant timestamp = Instant.now();
+		List<SkillEntry> entries = buildSkillEntries();
+		SkillsRecord record = new SkillsRecord(accountHash, timestamp, entries);
+		return new ExportPayload<>(DataType.SKILLS, record);
+	}
+
+	/**
+	 * Builds a list of {@link SkillEntry} records for all skills,
+	 * reading XP and real level from the client.
+	 *
+	 * @return list of skill entries for all skills
+	 */
+	private List<SkillEntry> buildSkillEntries()
+	{
+		Skill[] skills = Skill.values();
+		List<SkillEntry> entries = new ArrayList<>(skills.length);
+		for (Skill skill : skills)
+		{
+			entries.add(new SkillEntry(
+				skill.getName(),
+				client.getSkillExperience(skill),
+				client.getRealSkillLevel(skill)
+			));
+		}
+		return entries;
 	}
 
 	/**
@@ -293,7 +382,8 @@ public class OsrsDataExporterPlugin extends Plugin
 	private ScheduledFuture<?> scheduleDebouncedExport(
 		ScheduledFuture<?> pendingFuture,
 		ExportPayload<? extends ExportRecord> payload,
-		String label)
+		String label,
+		long delayMs)
 	{
 		if (pendingFuture != null)
 		{
@@ -302,11 +392,11 @@ public class OsrsDataExporterPlugin extends Plugin
 
 		ScheduledFuture<?> future = executor.schedule(
 			() -> dispatchExport(payload),
-			DEBOUNCE_DELAY_MS,
+			delayMs,
 			TimeUnit.MILLISECONDS
 		);
 
-		log.debug("{} change detected, export scheduled (debounce {}ms)", label, DEBOUNCE_DELAY_MS);
+		log.debug("{} change detected, export scheduled (debounce {}ms)", label, delayMs);
 		return future;
 	}
 

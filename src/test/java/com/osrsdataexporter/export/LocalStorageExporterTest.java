@@ -10,6 +10,8 @@ import com.osrsdataexporter.model.BankRecord;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
 import com.osrsdataexporter.model.InventoryRecord;
+import com.osrsdataexporter.model.SkillEntry;
+import com.osrsdataexporter.model.SkillsRecord;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -223,6 +225,62 @@ public class LocalStorageExporterTest
 	{
 		InventoryRecord record = new InventoryRecord(ACCOUNT_HASH, TIMESTAMP, items);
 		return new ExportPayload<>(DataType.INVENTORY, record);
+	}
+
+	private ExportPayload<SkillsRecord> buildSkillsPayload(java.util.List<SkillEntry> skills)
+	{
+		SkillsRecord record = new SkillsRecord(ACCOUNT_HASH, TIMESTAMP, skills);
+		return new ExportPayload<>(DataType.SKILLS, record);
+	}
+
+	private File expectedSkillsOutputFile()
+	{
+		return new File(tempFolder.getRoot(),
+			"osrs-data-exporter" + File.separator + ACCOUNT_HASH + File.separator + "skills.json");
+	}
+
+	@Test
+	public void export_skillsWritesCorrectFile() throws IOException
+	{
+		ExportPayload<SkillsRecord> payload = buildSkillsPayload(Arrays.asList(
+			new SkillEntry("Attack", 83776, 70),
+			new SkillEntry("Hitpoints", 1210421, 80)
+		));
+
+		exporter.export(payload);
+
+		File outputFile = expectedSkillsOutputFile();
+		assertTrue("Skills output file should exist", outputFile.exists());
+		assertEquals("skills.json", outputFile.getName());
+
+		String json = new String(Files.readAllBytes(outputFile.toPath()), StandardCharsets.UTF_8);
+		JsonObject root = gson.fromJson(json, JsonObject.class);
+
+		assertEquals("SKILLS", root.get("dataType").getAsString());
+		JsonObject record = root.getAsJsonObject("record");
+		assertEquals(ACCOUNT_HASH, record.get("accountHash").getAsLong());
+		assertEquals(2, record.getAsJsonArray("skills").size());
+	}
+
+	@Test
+	public void export_skillsWritesCorrectSkillData() throws IOException
+	{
+		ExportPayload<SkillsRecord> payload = buildSkillsPayload(Collections.singletonList(
+			new SkillEntry("Woodcutting", 1210421, 80)
+		));
+
+		exporter.export(payload);
+
+		JsonObject skill = gson.fromJson(
+				new String(Files.readAllBytes(expectedSkillsOutputFile().toPath()), StandardCharsets.UTF_8),
+				JsonObject.class)
+			.getAsJsonObject("record")
+			.getAsJsonArray("skills")
+			.get(0).getAsJsonObject();
+
+		assertEquals("Woodcutting", skill.get("skillName").getAsString());
+		assertEquals(1210421, skill.get("xp").getAsInt());
+		assertEquals(80, skill.get("level").getAsInt());
 	}
 
 	private File expectedOutputFile()

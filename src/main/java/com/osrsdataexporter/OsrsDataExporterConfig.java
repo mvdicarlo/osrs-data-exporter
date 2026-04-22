@@ -53,6 +53,18 @@ public interface OsrsDataExporterConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "exportSkillsData",
+		name = "Export Skills Data",
+		description = "Export a snapshot of skill levels and XP whenever a skill changes.",
+		section = dataSourcesSection,
+		position = 2
+	)
+	default boolean exportSkillsData()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "enableLocalStorage",
 		name = "Enable Local Storage",
 		description = "Save exported data as JSON files in the .runelite/osrs-data-exporter directory.",

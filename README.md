@@ -11,8 +11,9 @@ A [RuneLite](https://runelite.net/) plugin that exports OSRS account data to con
 
 - **Bank Export** — Snapshots bank contents whenever the bank is updated
 - **Inventory Export** — Snapshots inventory contents whenever the inventory changes
+- **Skills Export** — Snapshots all skill levels and XP whenever a stat changes (5 second debounce)
 - **Local Storage** — Writes JSON files to `~/.runelite/osrs-data-exporter/{accountHash}/`
-- **Smart Debounce** — Rapid changes are coalesced into a single export (2 second quiet period)
+- **Smart Debounce** — Rapid changes are coalesced into a single export (2s for items, 5s for skills)
 - **Seasonal World Filter** — Automatically disables exports on Leagues, Deadman, Tournament, Fresh Start, and nosave beta worlds
 - **Adapter/Factory Pattern** — Extensible architecture for adding new export targets
 
@@ -30,6 +31,7 @@ Found under the **OSRS Data Exporter** section in RuneLite settings:
 |---|---|---|---|
 | Export Bank Data | Data Sources | Enabled | Export bank snapshot on each update |
 | Export Inventory Data | Data Sources | Enabled | Export inventory snapshot on each update |
+| Export Skills Data | Data Sources | Enabled | Export skills snapshot on each stat change |
 | Enable Local Storage | Export Targets | Enabled | Write JSON to the local `.runelite` directory |
 
 ## Output Format
@@ -40,7 +42,8 @@ Each export target writes data per account. For local storage, files are at:
 ~/.runelite/osrs-data-exporter/
   └── {accountHash}/
       ├── bank.json
-      └── inventory.json
+      ├── inventory.json
+      └── skills.json
 ```
 
 Example `bank.json`:
@@ -83,6 +86,7 @@ Machine-readable JSON Schemas ([draft-07](http://json-schema.org/draft-07/schema
 |---|---|
 | `bank.json` | [schema/bank.json](schema/bank.json) |
 | `inventory.json` | [schema/inventory.json](schema/inventory.json) |
+| `skills.json` | [schema/skills.json](schema/skills.json) |
 
 ## Building
 
