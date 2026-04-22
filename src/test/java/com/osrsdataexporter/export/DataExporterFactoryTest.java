@@ -22,6 +22,8 @@ public class DataExporterFactoryTest
 		config = mock(OsrsDataExporterConfig.class);
 		gson = new Gson();
 		factory = new DataExporterFactory(config, gson);
+
+		when(config.enableAzureBlobStorage()).thenReturn(false);
 	}
 
 	@Test
@@ -76,5 +78,51 @@ public class DataExporterFactoryTest
 
 		factory.shutdown();
 		assertTrue(factory.getActiveExporters().isEmpty());
+	}
+
+	@Test
+	public void init_withAzureEnabledAndValidConfig_registersAzureExporter()
+	{
+		when(config.enableLocalStorage()).thenReturn(false);
+		when(config.enableAzureBlobStorage()).thenReturn(true);
+		when(config.azureBlobConnectionString()).thenReturn(
+			"DefaultEndpointsProtocol=https;AccountName=testaccount;AccountKey=dGVzdGtleQ==;EndpointSuffix=core.windows.net");
+		when(config.azureBlobContainerName()).thenReturn("osrs-data-exporter");
+
+		factory.init();
+
+		List<DataExporter> exporters = factory.getActiveExporters();
+		assertEquals(1, exporters.size());
+		assertEquals(ExportType.AZURE_BLOB_STORAGE, exporters.get(0).getType());
+	}
+
+	@Test
+	public void init_withAzureEnabledAndEmptyConnectionString_registersNoAzureExporter()
+	{
+		when(config.enableLocalStorage()).thenReturn(false);
+		when(config.enableAzureBlobStorage()).thenReturn(true);
+		when(config.azureBlobConnectionString()).thenReturn("");
+		when(config.azureBlobContainerName()).thenReturn("osrs-data-exporter");
+
+		factory.init();
+
+		assertTrue(factory.getActiveExporters().isEmpty());
+	}
+
+	@Test
+	public void init_withLocalAndAzureEnabled_registersBothExporters()
+	{
+		when(config.enableLocalStorage()).thenReturn(true);
+		when(config.enableAzureBlobStorage()).thenReturn(true);
+		when(config.azureBlobConnectionString()).thenReturn(
+			"DefaultEndpointsProtocol=https;AccountName=testaccount;AccountKey=dGVzdGtleQ==;EndpointSuffix=core.windows.net");
+		when(config.azureBlobContainerName()).thenReturn("osrs-data-exporter");
+
+		factory.init();
+
+		List<DataExporter> exporters = factory.getActiveExporters();
+		assertEquals(2, exporters.size());
+		assertTrue(exporters.stream().anyMatch(e -> e.getType() == ExportType.LOCAL_STORAGE));
+		assertTrue(exporters.stream().anyMatch(e -> e.getType() == ExportType.AZURE_BLOB_STORAGE));
 	}
 }

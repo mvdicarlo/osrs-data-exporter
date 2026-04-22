@@ -25,6 +25,7 @@ public class DataExporterFactory
 	private final Gson gson;
 
 	private volatile List<DataExporter> cachedActiveExporters = Collections.emptyList();
+	private volatile List<String> lastInitErrors = Collections.emptyList();
 
 	public DataExporterFactory(OsrsDataExporterConfig config, Gson gson)
 	{
@@ -39,6 +40,7 @@ public class DataExporterFactory
 	public void init()
 	{
 		exporters.clear();
+		List<String> errors = new ArrayList<>();
 
 		if (config.enableLocalStorage())
 		{
@@ -47,7 +49,46 @@ public class DataExporterFactory
 			log.debug("Registered LocalStorageExporter");
 		}
 
+		if (config.enableAzureBlobStorage())
+		{
+			String connectionString = config.azureBlobConnectionString();
+			String containerName = config.azureBlobContainerName();
+
+			if (connectionString == null || connectionString.trim().isEmpty())
+			{
+				String msg = "Azure Blob export enabled but connection string is empty";
+				log.warn("{}; exporter not registered", msg);
+				errors.add(msg);
+			}
+			else
+			{
+				try
+				{
+					AzureBlobStorageExporter azureExporter =
+						new AzureBlobStorageExporter(gson, connectionString, containerName);
+					exporters.put(azureExporter.getType(), azureExporter);
+					log.debug("Registered AzureBlobStorageExporter");
+				}
+				catch (IllegalArgumentException e)
+				{
+					String msg = "Invalid Azure Blob config: " + e.getMessage();
+					log.error("{}; exporter not registered", msg, e);
+					errors.add(msg);
+				}
+			}
+		}
+
 		cachedActiveExporters = Collections.unmodifiableList(new ArrayList<>(exporters.values()));
+		lastInitErrors = Collections.unmodifiableList(errors);
+	}
+
+	/**
+	 * Returns error messages produced by the most recent {@link #init()} call.
+	 * Intended for surfacing to the user (e.g. game chat) after startup or config change.
+	 */
+	public List<String> getLastInitErrors()
+	{
+		return lastInitErrors;
 	}
 
 	/**
@@ -67,5 +108,6 @@ public class DataExporterFactory
 	{
 		exporters.clear();
 		cachedActiveExporters = Collections.emptyList();
+		lastInitErrors = Collections.emptyList();
 	}
 }

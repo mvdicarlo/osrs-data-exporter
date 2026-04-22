@@ -16,7 +16,12 @@ public interface OsrsDataExporterConfig extends Config
 	String CONFIG_GROUP = "osrsdataexporter";
 
 	/** Config keys that control export targets — used to detect runtime changes. */
-	Set<String> EXPORT_TARGET_KEYS = Set.of("enableLocalStorage");
+	Set<String> EXPORT_TARGET_KEYS = Set.of(
+		"enableLocalStorage",
+		"enableAzureBlobStorage",
+		"azureBlobConnectionString",
+		"azureBlobContainerName"
+	);
 
 	@ConfigSection(
 		name = "Data Sources",
@@ -90,5 +95,42 @@ public interface OsrsDataExporterConfig extends Config
 	default boolean enableLocalStorage()
 	{
 		return true;
+	}
+
+	@ConfigItem(
+		keyName = "enableAzureBlobStorage",
+		name = "Enable Azure Blob Storage",
+		description = "Upload exported JSON payloads to Azure Blob Storage.",
+		section = exportTargetsSection,
+		position = 1
+	)
+	default boolean enableAzureBlobStorage()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "azureBlobConnectionString",
+		name = "Azure Blob Connection String",
+		description = "Connection string for the Azure Storage account.",
+		section = exportTargetsSection,
+		position = 2,
+		secret = true
+	)
+	default String azureBlobConnectionString()
+	{
+		return "";
+	}
+
+	@ConfigItem(
+		keyName = "azureBlobContainerName",
+		name = "Azure Blob Container",
+		description = "Container name used for exported data blobs.",
+		section = exportTargetsSection,
+		position = 3
+	)
+	default String azureBlobContainerName()
+	{
+		return "osrs-data-exporter";
 	}
 }

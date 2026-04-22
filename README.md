@@ -14,6 +14,7 @@ A [RuneLite](https://runelite.net/) plugin that exports OSRS account data to con
 - **Skills Export** — Snapshots all skill levels and XP whenever a stat changes (5 second debounce)
 - **Group Storage Export** — Snapshots Group Ironman shared storage whenever it is updated
 - **Local Storage** — Writes JSON files to `~/.runelite/osrs-data-exporter/{accountHash}/`
+- **Azure Blob Storage** — Uploads payload JSON files to an Azure Storage container using a connection string
 - **Smart Debounce** — Rapid changes are coalesced into a single export (2s for items, 5s for skills)
 - **Seasonal World Filter** — Automatically disables exports on Leagues, Deadman, Tournament, Fresh Start, and nosave beta worlds
 - **Adapter/Factory Pattern** — Extensible architecture for adding new export targets
@@ -24,6 +25,7 @@ A [RuneLite](https://runelite.net/) plugin that exports OSRS account data to con
 | Target | Status | Description |
 |---|---|---|
 | Local Storage | Available | Writes JSON files to `~/.runelite/osrs-data-exporter/{accountHash}/` |
+| Azure Blob Storage | Available | Uploads blobs under `osrs-data-exporter/{accountHash}/{dataType}.json` |
 
 ## Configuration
 
@@ -36,6 +38,9 @@ Found under the **OSRS Data Exporter** section in RuneLite settings:
 | Export Skills Data | Data Sources | Enabled | Export skills snapshot on each stat change |
 | Export Group Storage Data | Data Sources | Enabled | Export GIM shared storage snapshot on each update |
 | Enable Local Storage | Export Targets | Enabled | Write JSON to the local `.runelite` directory |
+| Enable Azure Blob Storage | Export Targets | Disabled | Upload JSON payloads to an Azure Blob container |
+| Azure Blob Connection String | Export Targets | Empty | Azure Storage connection string (secret) |
+| Azure Blob Container | Export Targets | `osrs-data-exporter` | Container name used for uploaded blobs |
 
 ## Output Format
 

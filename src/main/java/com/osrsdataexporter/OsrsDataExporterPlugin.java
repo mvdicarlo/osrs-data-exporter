@@ -24,9 +24,11 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.ChatMessageType;
 import net.runelite.api.WorldType;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.StatChanged;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.eventbus.EventBus;
@@ -67,6 +69,9 @@ public class OsrsDataExporterPlugin extends Plugin
 	@Inject
 	private EventBus eventBus;
 
+	@Inject
+	private ClientThread clientThread;
+
 	private ScheduledExecutorService executor;
 	private DataExporterFactory exporterFactory;
 	private final List<DataSourceHandler<?>> dataSources = new ArrayList<>();
@@ -83,6 +88,7 @@ public class OsrsDataExporterPlugin extends Plugin
 
 		exporterFactory = new DataExporterFactory(config, gson);
 		exporterFactory.init();
+		reportInitErrors();
 
 		dataSources.add(new BankDataSource(client, config));
 		dataSources.add(new InventoryDataSource(client, config));
@@ -143,6 +149,7 @@ public class OsrsDataExporterPlugin extends Plugin
 		{
 			log.debug("Export target config changed ({}), reinitializing exporters", event.getKey());
 			exporterFactory.init();
+			reportInitErrors();
 		}
 	}
 
@@ -236,6 +243,7 @@ public class OsrsDataExporterPlugin extends Plugin
 			catch (Exception e)
 			{
 				log.error("Exporter {} failed", exporter.getType(), e);
+				notifyExportFailure(exporter, e);
 			}
 		}
 
@@ -254,5 +262,32 @@ public class OsrsDataExporterPlugin extends Plugin
 		{
 			log.error("Failed to post export event for {}", payload.getDataType().getIdentifier(), e);
 		}
+	}
+
+	/**
+	 * Posts a game-chat message describing an export failure so the user is aware
+	 * without needing to read client logs. Marshalled onto the client thread.
+	 */
+	private void notifyExportFailure(DataExporter exporter, Exception e)
+	{
+		String reason = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+		String message = "[OSRS Data Exporter] " + exporter.getType() + " export failed: " + reason;
+		postChatMessage(message);
+	}
+
+	/**
+	 * Posts any errors raised during the most recent exporter initialization to game chat.
+	 */
+	private void reportInitErrors()
+	{
+		for (String error : exporterFactory.getLastInitErrors())
+		{
+			postChatMessage("[OSRS Data Exporter] " + error);
+		}
+	}
+
+	private void postChatMessage(String message)
+	{
+		clientThread.invokeLater(() -> client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", message, null));
 	}
 }
