@@ -6,11 +6,10 @@ import com.osrsdataexporter.datasource.BankDataSource;
 import com.osrsdataexporter.datasource.DataSourceHandler;
 import com.osrsdataexporter.datasource.GroupStorageDataSource;
 import com.osrsdataexporter.datasource.InventoryDataSource;
-import com.osrsdataexporter.datasource.ItemContainerDataSource;
 import com.osrsdataexporter.datasource.SkillsDataSource;
 import com.osrsdataexporter.export.DataExporter;
 import com.osrsdataexporter.export.DataExporterFactory;
-import com.osrsdataexporter.model.DataType;
+import com.osrsdataexporter.model.AccountContext;
 import com.osrsdataexporter.model.ExportPayload;
 import com.osrsdataexporter.model.ExportRecord;
 import java.util.ArrayList;
@@ -22,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.Player;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.WorldType;
 import net.runelite.api.events.ItemContainerChanged;
@@ -150,35 +150,20 @@ public class OsrsDataExporterPlugin extends Plugin
 	@Subscribe
 	public void onItemContainerChanged(ItemContainerChanged event)
 	{
-		if (isSeasonalWorld())
-		{
-			return;
-		}
-
-		long accountHash = client.getAccountHash();
-		if (accountHash == -1)
-		{
-			return;
-		}
-
-		int containerId = event.getContainerId();
-		for (DataSourceHandler<?> handler : dataSources)
-		{
-			if (handler instanceof ItemContainerDataSource)
-			{
-				ItemContainerDataSource<?> containerSource = (ItemContainerDataSource<?>) handler;
-				if (containerSource.getContainerId() == containerId)
-				{
-					containerSource.handleContainerChange(
-						event.getItemContainer(), accountHash, executor, this::dispatchExport);
-					return;
-				}
-			}
-		}
+		routeEvent(event);
 	}
 
 	@Subscribe
 	public void onStatChanged(StatChanged event)
+	{
+		routeEvent(event);
+	}
+
+	/**
+	 * Routes a RuneLite event to the first data source that can handle it.
+	 * Guards against seasonal worlds and unauthenticated sessions.
+	 */
+	private void routeEvent(Object event)
 	{
 		if (isSeasonalWorld())
 		{
@@ -191,11 +176,15 @@ public class OsrsDataExporterPlugin extends Plugin
 			return;
 		}
 
+		Player localPlayer = client.getLocalPlayer();
+		String characterName = localPlayer != null ? localPlayer.getName() : null;
+		AccountContext account = new AccountContext(accountHash, characterName);
+
 		for (DataSourceHandler<?> handler : dataSources)
 		{
-			if (handler.getDataType() == DataType.SKILLS)
+			if (handler.canHandle(event))
 			{
-				((SkillsDataSource) handler).handleStatChanged(accountHash, executor, this::dispatchExport);
+				handler.handleEvent(event, account, executor, this::dispatchExport);
 				return;
 			}
 		}

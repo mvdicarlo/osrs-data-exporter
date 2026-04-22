@@ -1,6 +1,7 @@
 package com.osrsdataexporter.datasource;
 
 import com.osrsdataexporter.OsrsDataExporterConfig;
+import com.osrsdataexporter.model.AccountContext;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
 import com.osrsdataexporter.model.ExportRecord;
@@ -15,6 +16,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
 import net.runelite.api.Client;
 import net.runelite.api.Skill;
+import net.runelite.api.events.StatChanged;
 
 /**
  * Data source for skills snapshots. Uses a longer debounce than item
@@ -38,12 +40,16 @@ public class SkillsDataSource extends DataSourceHandler<SkillsRecord>
 		return config.exportSkillsData();
 	}
 
-	/**
-	 * Handles a stat change. Only schedules an export if real XP has changed
-	 * for at least one skill — temporary boosts and drains are ignored.
-	 */
-	public void handleStatChanged(
-		long accountHash,
+	@Override
+	public boolean canHandle(Object event)
+	{
+		return event instanceof StatChanged;
+	}
+
+	@Override
+	public void handleEvent(
+		Object event,
+		AccountContext account,
 		ScheduledExecutorService executor,
 		Consumer<ExportPayload<? extends ExportRecord>> dispatcher)
 	{
@@ -52,35 +58,28 @@ public class SkillsDataSource extends DataSourceHandler<SkillsRecord>
 			return;
 		}
 
-		if (!hasXpChanged())
+		if (!hasXpChanged((StatChanged) event))
 		{
 			return;
 		}
 
-		ExportPayload<SkillsRecord> payload = snapshot(accountHash);
+		ExportPayload<SkillsRecord> payload = snapshot(account);
 		scheduleExport(payload, executor, dispatcher);
 	}
 
 	/**
-	 * Checks whether any skill's XP has changed since the last check,
-	 * and updates the tracked values.
+	 * Returns {@code true} if the event represents a real XP gain for its skill,
+	 * updating the tracked value. Returns {@code false} for temporary boosts,
+	 * stat drains, and HP regeneration where XP is unchanged.
 	 */
-	private boolean hasXpChanged()
+	private boolean hasXpChanged(StatChanged event)
 	{
-		boolean changed = false;
-		for (Skill skill : Skill.values())
-		{
-			int currentXp = client.getSkillExperience(skill);
-			Integer previousXp = lastKnownXp.put(skill, currentXp);
-			if (previousXp == null || previousXp != currentXp)
-			{
-				changed = true;
-			}
-		}
-		return changed;
+		int newXp = event.getXp();
+		Integer previousXp = lastKnownXp.put(event.getSkill(), newXp);
+		return previousXp == null || previousXp != newXp;
 	}
 
-	private ExportPayload<SkillsRecord> snapshot(long accountHash)
+	private ExportPayload<SkillsRecord> snapshot(AccountContext account)
 	{
 		Skill[] skills = Skill.values();
 		List<SkillEntry> entries = new ArrayList<>(skills.length);
@@ -94,7 +93,7 @@ public class SkillsDataSource extends DataSourceHandler<SkillsRecord>
 			));
 		}
 
-		SkillsRecord record = new SkillsRecord(accountHash, Instant.now(), entries);
+		SkillsRecord record = new SkillsRecord(account, Instant.now(), entries);
 		return new ExportPayload<>(record);
 	}
 }

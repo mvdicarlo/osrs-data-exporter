@@ -1,6 +1,7 @@
 package com.osrsdataexporter.datasource;
 
 import com.osrsdataexporter.OsrsDataExporterConfig;
+import com.osrsdataexporter.model.AccountContext;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
 import com.osrsdataexporter.model.ExportRecord;
@@ -52,6 +53,28 @@ public abstract class DataSourceHandler<T extends ExportRecord>
 	 * Whether this data source is currently enabled via plugin config.
 	 */
 	public abstract boolean isEnabled();
+
+	/**
+	 * Returns {@code true} if this handler can process the given event.
+	 * Each subclass checks the event type and any routing criteria
+	 * (e.g. container ID for item events).
+	 */
+	public abstract boolean canHandle(Object event);
+
+	/**
+	 * Processes an event this handler has claimed via {@link #canHandle(Object)}.
+	 * Checks config, snapshots data, and schedules a debounced export.
+	 *
+	 * @param event   the RuneLite event that triggered this handler
+	 * @param account the current player's account context
+	 * @param executor   the background executor for scheduling exports
+	 * @param dispatcher callback to dispatch the payload to exporters
+	 */
+	public abstract void handleEvent(
+		Object event,
+		AccountContext account,
+		ScheduledExecutorService executor,
+		Consumer<ExportPayload<? extends ExportRecord>> dispatcher);
 
 	/**
 	 * Schedules a debounced export, cancelling any previously pending one.

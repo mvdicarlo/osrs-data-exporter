@@ -60,7 +60,10 @@ Example `bank.json`:
 {
   "dataType": "BANK",
   "record": {
-    "accountHash": 123456789,
+    "account": {
+      "accountHash": 123456789,
+      "characterName": "Zezima"
+    },
     "timestamp": "2026-04-21T12:00:00Z",
     "items": [
       {

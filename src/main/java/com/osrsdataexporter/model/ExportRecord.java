@@ -8,8 +8,8 @@ import lombok.ToString;
 
 /**
  * Abstract base class for all exportable records.
- * Every record is associated with an account (via accountHash) and carries
- * a consistent timestamp representing when the export action was triggered.
+ * Every record carries account identity and a timestamp representing
+ * when the export action was triggered.
  */
 @Getter
 @EqualsAndHashCode
@@ -18,10 +18,9 @@ import lombok.ToString;
 public abstract class ExportRecord
 {
 	/**
-	 * The unique account hash identifying the player.
-	 * Obtained via {@code client.getAccountHash()}.
+	 * Account identity (hash + character name) for the player who owns this record.
 	 */
-	private final long accountHash;
+	private final AccountContext account;
 
 	/**
 	 * The timestamp when the export action was triggered.

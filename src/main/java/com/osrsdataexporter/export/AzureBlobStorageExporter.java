@@ -84,7 +84,7 @@ public class AzureBlobStorageExporter implements DataExporter
 		catch (Exception e)
 		{
 			log.error("Failed to export {} data to Azure Blob Storage for account {}",
-				payload.getDataType().getIdentifier(), payload.getRecord().getAccountHash(), e);
+				payload.getDataType().getIdentifier(), payload.getRecord().getAccount().getAccountHash(), e);
 		}
 	}
 
@@ -129,7 +129,7 @@ public class AzureBlobStorageExporter implements DataExporter
 			if (response.isSuccessful())
 			{
 				log.debug("Exported {} data for account {} to Azure blob {}/{}",
-					payload.getDataType().getIdentifier(), payload.getRecord().getAccountHash(), containerName, blobName);
+					payload.getDataType().getIdentifier(), payload.getRecord().getAccount().getAccountHash(), containerName, blobName);
 				return;
 			}
 
@@ -189,7 +189,7 @@ public class AzureBlobStorageExporter implements DataExporter
 
 	private String buildBlobName(ExportPayload<? extends ExportRecord> payload)
 	{
-		long accountHash = payload.getRecord().getAccountHash();
+		long accountHash = payload.getRecord().getAccount().getAccountHash();
 		String identifier = payload.getDataType().getIdentifier();
 		return PLUGIN_BLOB_PREFIX + "/" + accountHash + "/" + identifier + ".json";
 	}

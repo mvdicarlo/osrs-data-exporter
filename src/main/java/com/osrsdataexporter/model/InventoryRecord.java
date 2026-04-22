@@ -18,9 +18,9 @@ public class InventoryRecord extends ExportRecord
 	 */
 	List<ItemEntry> items;
 
-	public InventoryRecord(long accountHash, Instant timestamp, List<ItemEntry> items)
+	public InventoryRecord(AccountContext account, Instant timestamp, List<ItemEntry> items)
 	{
-		super(accountHash, timestamp, DataType.INVENTORY);
+		super(account, timestamp, DataType.INVENTORY);
 		this.items = items;
 	}
 }

@@ -44,7 +44,7 @@ public class LocalStorageExporter implements DataExporter
 	@Override
 	public void export(ExportPayload<? extends ExportRecord> payload)
 	{
-		long accountHash = payload.getRecord().getAccountHash();
+		long accountHash = payload.getRecord().getAccount().getAccountHash();
 		DataType dataType = payload.getDataType();
 		String identifier = dataType.getIdentifier();
 

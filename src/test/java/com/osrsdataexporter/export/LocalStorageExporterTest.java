@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
 import com.osrsdataexporter.model.ItemEntry;
+import com.osrsdataexporter.model.AccountContext;
 import com.osrsdataexporter.model.BankRecord;
 import com.osrsdataexporter.model.ExportPayload;
 import com.osrsdataexporter.model.GroupStorageRecord;
@@ -30,6 +31,7 @@ import org.junit.rules.TemporaryFolder;
 public class LocalStorageExporterTest
 {
 	private static final long ACCOUNT_HASH = 123456789L;
+	private static final AccountContext ACCOUNT = new AccountContext(ACCOUNT_HASH, "TestCharacter");
 	private static final Instant TIMESTAMP = Instant.parse("2026-04-21T12:00:00Z");
 
 	@Rule
@@ -85,7 +87,7 @@ public class LocalStorageExporterTest
 
 		assertEquals("BANK", root.get("dataType").getAsString());
 		JsonObject record = root.getAsJsonObject("record");
-		assertEquals(ACCOUNT_HASH, record.get("accountHash").getAsLong());
+		assertEquals(ACCOUNT_HASH, record.getAsJsonObject("account").get("accountHash").getAsLong());
 		assertEquals(2, record.getAsJsonArray("items").size());
 	}
 
@@ -187,7 +189,7 @@ public class LocalStorageExporterTest
 
 		assertEquals("INVENTORY", root.get("dataType").getAsString());
 		JsonObject record = root.getAsJsonObject("record");
-		assertEquals(ACCOUNT_HASH, record.get("accountHash").getAsLong());
+		assertEquals(ACCOUNT_HASH, record.getAsJsonObject("account").get("accountHash").getAsLong());
 		assertEquals(2, record.getAsJsonArray("items").size());
 	}
 
@@ -217,19 +219,19 @@ public class LocalStorageExporterTest
 
 	private ExportPayload<BankRecord> buildPayload(java.util.List<ItemEntry> items)
 	{
-		BankRecord record = new BankRecord(ACCOUNT_HASH, TIMESTAMP, items);
+		BankRecord record = new BankRecord(ACCOUNT, TIMESTAMP, items);
 		return new ExportPayload<>(record);
 	}
 
 	private ExportPayload<InventoryRecord> buildInventoryPayload(java.util.List<ItemEntry> items)
 	{
-		InventoryRecord record = new InventoryRecord(ACCOUNT_HASH, TIMESTAMP, items);
+		InventoryRecord record = new InventoryRecord(ACCOUNT, TIMESTAMP, items);
 		return new ExportPayload<>(record);
 	}
 
 	private ExportPayload<SkillsRecord> buildSkillsPayload(java.util.List<SkillEntry> skills)
 	{
-		SkillsRecord record = new SkillsRecord(ACCOUNT_HASH, TIMESTAMP, skills);
+		SkillsRecord record = new SkillsRecord(ACCOUNT, TIMESTAMP, skills);
 		return new ExportPayload<>(record);
 	}
 
@@ -258,7 +260,7 @@ public class LocalStorageExporterTest
 
 		assertEquals("SKILLS", root.get("dataType").getAsString());
 		JsonObject record = root.getAsJsonObject("record");
-		assertEquals(ACCOUNT_HASH, record.get("accountHash").getAsLong());
+		assertEquals(ACCOUNT_HASH, record.getAsJsonObject("account").get("accountHash").getAsLong());
 		assertEquals(2, record.getAsJsonArray("skills").size());
 	}
 
@@ -303,7 +305,7 @@ public class LocalStorageExporterTest
 
 	private ExportPayload<GroupStorageRecord> buildGroupStoragePayload(java.util.List<ItemEntry> items)
 	{
-		GroupStorageRecord record = new GroupStorageRecord(ACCOUNT_HASH, TIMESTAMP, items);
+		GroupStorageRecord record = new GroupStorageRecord(ACCOUNT, TIMESTAMP, items);
 		return new ExportPayload<>(record);
 	}
 
@@ -326,7 +328,7 @@ public class LocalStorageExporterTest
 
 		assertEquals("GROUP_STORAGE", root.get("dataType").getAsString());
 		JsonObject record = root.getAsJsonObject("record");
-		assertEquals(ACCOUNT_HASH, record.get("accountHash").getAsLong());
+		assertEquals(ACCOUNT_HASH, record.getAsJsonObject("account").get("accountHash").getAsLong());
 		assertEquals(2, record.getAsJsonArray("items").size());
 	}
 

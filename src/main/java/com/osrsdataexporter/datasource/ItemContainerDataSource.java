@@ -1,6 +1,7 @@
 package com.osrsdataexporter.datasource;
 
 import com.osrsdataexporter.OsrsDataExporterConfig;
+import com.osrsdataexporter.model.AccountContext;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
 import com.osrsdataexporter.model.ExportRecord;
@@ -13,6 +14,7 @@ import net.runelite.api.Client;
 import net.runelite.api.Item;
 import net.runelite.api.ItemComposition;
 import net.runelite.api.ItemContainer;
+import net.runelite.api.events.ItemContainerChanged;
 
 /**
  * Base class for data sources backed by an {@link ItemContainer}.
@@ -38,13 +40,17 @@ public abstract class ItemContainerDataSource<T extends ExportRecord> extends Da
 		return containerId;
 	}
 
-	/**
-	 * Handles an item container change. Checks if enabled,
-	 * snapshots the container, and schedules a debounced export.
-	 */
-	public void handleContainerChange(
-		ItemContainer container,
-		long accountHash,
+	@Override
+	public boolean canHandle(Object event)
+	{
+		return event instanceof ItemContainerChanged
+			&& ((ItemContainerChanged) event).getContainerId() == containerId;
+	}
+
+	@Override
+	public void handleEvent(
+		Object event,
+		AccountContext account,
 		ScheduledExecutorService executor,
 		Consumer<ExportPayload<? extends ExportRecord>> dispatcher)
 	{
@@ -53,14 +59,20 @@ public abstract class ItemContainerDataSource<T extends ExportRecord> extends Da
 			return;
 		}
 
-		ExportPayload<T> payload = snapshot(accountHash, container);
+		ItemContainer container = ((ItemContainerChanged) event).getItemContainer();
+		if (container == null)
+		{
+			return;
+		}
+
+		ExportPayload<T> payload = snapshot(account, container);
 		scheduleExport(payload, executor, dispatcher);
 	}
 
 	/**
 	 * Creates an export payload from the given item container.
 	 */
-	protected abstract ExportPayload<T> snapshot(long accountHash, ItemContainer container);
+	protected abstract ExportPayload<T> snapshot(AccountContext account, ItemContainer container);
 
 	/**
 	 * Converts raw items into {@link ItemEntry} records,

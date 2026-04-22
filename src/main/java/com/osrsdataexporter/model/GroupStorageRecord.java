@@ -18,9 +18,9 @@ public class GroupStorageRecord extends ExportRecord
 	 */
 	List<ItemEntry> items;
 
-	public GroupStorageRecord(long accountHash, Instant timestamp, List<ItemEntry> items)
+	public GroupStorageRecord(AccountContext account, Instant timestamp, List<ItemEntry> items)
 	{
-		super(accountHash, timestamp, DataType.GROUP_STORAGE);
+		super(account, timestamp, DataType.GROUP_STORAGE);
 		this.items = items;
 	}
 }

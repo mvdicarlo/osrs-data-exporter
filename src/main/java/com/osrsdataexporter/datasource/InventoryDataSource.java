@@ -10,6 +10,7 @@ import java.util.List;
 import net.runelite.api.Client;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.gameval.InventoryID;
+import com.osrsdataexporter.model.AccountContext;
 
 /**
  * Data source for inventory snapshots.
@@ -28,10 +29,10 @@ public class InventoryDataSource extends ItemContainerDataSource<InventoryRecord
 	}
 
 	@Override
-	protected ExportPayload<InventoryRecord> snapshot(long accountHash, ItemContainer container)
+	protected ExportPayload<InventoryRecord> snapshot(AccountContext account, ItemContainer container)
 	{
 		List<ItemEntry> entries = buildItemEntries(container.getItems());
-		InventoryRecord record = new InventoryRecord(accountHash, Instant.now(), entries);
+		InventoryRecord record = new InventoryRecord(account, Instant.now(), entries);
 		return new ExportPayload<>(record);
 	}
 }

@@ -15,12 +15,11 @@
     "record": {
       "type": "object",
       "description": "The group storage snapshot record.",
-      "required": ["accountHash", "timestamp", "items"],
+      "required": ["account", "timestamp", "items"],
       "additionalProperties": false,
       "properties": {
-        "accountHash": {
-          "type": "integer",
-          "description": "The unique account hash identifying the player, obtained from the RuneLite client API."
+        "account": {
+          "$ref": "#/$defs/accountContext"
         },
         "timestamp": {
           "type": "string",
@@ -38,6 +37,23 @@
     }
   },
   "$defs": {
+    "accountContext": {
+      "title": "AccountContext",
+      "description": "Identifies the player account associated with this export.",
+      "type": "object",
+      "required": ["accountHash"],
+      "additionalProperties": false,
+      "properties": {
+        "accountHash": {
+          "type": "integer",
+          "description": "Stable numeric account identifier from the RuneLite client API."
+        },
+        "characterName": {
+          "type": ["string", "null"],
+          "description": "In-game character name. May be null if the player object was not yet loaded at snapshot time."
+        }
+      }
+    },
     "itemEntry": {
       "title": "ItemEntry",
       "description": "A single item in the group storage snapshot.",

@@ -18,9 +18,9 @@ public class SkillsRecord extends ExportRecord
 	 */
 	List<SkillEntry> skills;
 
-	public SkillsRecord(long accountHash, Instant timestamp, List<SkillEntry> skills)
+	public SkillsRecord(AccountContext account, Instant timestamp, List<SkillEntry> skills)
 	{
-		super(accountHash, timestamp, DataType.SKILLS);
+		super(account, timestamp, DataType.SKILLS);
 		this.skills = skills;
 	}
 }

@@ -18,9 +18,9 @@ public class BankRecord extends ExportRecord
 	 */
 	List<ItemEntry> items;
 
-	public BankRecord(long accountHash, Instant timestamp, List<ItemEntry> items)
+	public BankRecord(AccountContext account, Instant timestamp, List<ItemEntry> items)
 	{
-		super(accountHash, timestamp, DataType.BANK);
+		super(account, timestamp, DataType.BANK);
 		this.items = items;
 	}
 }
