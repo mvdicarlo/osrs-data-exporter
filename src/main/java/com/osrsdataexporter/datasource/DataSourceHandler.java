@@ -20,6 +20,12 @@ import net.runelite.api.Client;
 @Slf4j
 public abstract class DataSourceHandler<T extends ExportRecord>
 {
+	/** Debounce delay for item container changes (bank, inventory, group storage). */
+	protected static final long ITEM_DEBOUNCE_DELAY_MS = 2000;
+
+	/** Debounce delay for skill changes — longer because XP ticks fire rapidly. */
+	protected static final long SKILLS_DEBOUNCE_DELAY_MS = 5000;
+
 	protected final Client client;
 	protected final OsrsDataExporterConfig config;
 	private final DataType dataType;
@@ -32,6 +38,14 @@ public abstract class DataSourceHandler<T extends ExportRecord>
 		this.config = config;
 		this.dataType = dataType;
 		this.debounceDelayMs = debounceDelayMs;
+	}
+
+	/**
+	 * Returns the data type this handler produces.
+	 */
+	public DataType getDataType()
+	{
+		return dataType;
 	}
 
 	/**

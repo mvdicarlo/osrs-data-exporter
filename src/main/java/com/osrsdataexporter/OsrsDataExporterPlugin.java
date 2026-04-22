@@ -6,9 +6,11 @@ import com.osrsdataexporter.datasource.BankDataSource;
 import com.osrsdataexporter.datasource.DataSourceHandler;
 import com.osrsdataexporter.datasource.GroupStorageDataSource;
 import com.osrsdataexporter.datasource.InventoryDataSource;
+import com.osrsdataexporter.datasource.ItemContainerDataSource;
 import com.osrsdataexporter.datasource.SkillsDataSource;
 import com.osrsdataexporter.export.DataExporter;
 import com.osrsdataexporter.export.DataExporterFactory;
+import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
 import com.osrsdataexporter.model.ExportRecord;
 import java.util.ArrayList;
@@ -16,14 +18,15 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.WorldType;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.StatChanged;
-import net.runelite.api.gameval.InventoryID;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -31,7 +34,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 /**
  * OSRS Data Exporter plugin.
  *
- * <p>Captures account data (bank, inventory, and skills) and exports it
+ * <p>Captures account data (bank, inventory, skills, and group storage) and exports it
  * to configurable targets via the adapter/factory pattern. All export I/O
  * is performed off the client thread to avoid any impact on game performance.</p>
  *
@@ -47,6 +50,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 public class OsrsDataExporterPlugin extends Plugin
 {
 	private static final String EXECUTOR_THREAD_NAME = "osrs-data-exporter";
+	private static final long EXECUTOR_SHUTDOWN_TIMEOUT_SECS = 2;
 
 	@Inject
 	private Client client;
@@ -59,12 +63,7 @@ public class OsrsDataExporterPlugin extends Plugin
 
 	private ScheduledExecutorService executor;
 	private DataExporterFactory exporterFactory;
-
 	private final List<DataSourceHandler<?>> dataSources = new ArrayList<>();
-	private BankDataSource bankDataSource;
-	private InventoryDataSource inventoryDataSource;
-	private GroupStorageDataSource groupStorageDataSource;
-	private SkillsDataSource skillsDataSource;
 
 	@Override
 	protected void startUp()
@@ -79,14 +78,10 @@ public class OsrsDataExporterPlugin extends Plugin
 		exporterFactory = new DataExporterFactory(config, gson);
 		exporterFactory.init();
 
-		bankDataSource = new BankDataSource(client, config);
-		inventoryDataSource = new InventoryDataSource(client, config);
-		groupStorageDataSource = new GroupStorageDataSource(client, config);
-		skillsDataSource = new SkillsDataSource(client, config);
-		dataSources.add(bankDataSource);
-		dataSources.add(inventoryDataSource);
-		dataSources.add(groupStorageDataSource);
-		dataSources.add(skillsDataSource);
+		dataSources.add(new BankDataSource(client, config));
+		dataSources.add(new InventoryDataSource(client, config));
+		dataSources.add(new GroupStorageDataSource(client, config));
+		dataSources.add(new SkillsDataSource(client, config));
 
 		log.info("OSRS Data Exporter started");
 	}
@@ -96,21 +91,29 @@ public class OsrsDataExporterPlugin extends Plugin
 	{
 		dataSources.forEach(DataSourceHandler::shutdown);
 		dataSources.clear();
-		bankDataSource = null;
-		inventoryDataSource = null;
-		groupStorageDataSource = null;
-		skillsDataSource = null;
+
+		if (executor != null)
+		{
+			executor.shutdown();
+			try
+			{
+				if (!executor.awaitTermination(EXECUTOR_SHUTDOWN_TIMEOUT_SECS, TimeUnit.SECONDS))
+				{
+					executor.shutdownNow();
+				}
+			}
+			catch (InterruptedException e)
+			{
+				executor.shutdownNow();
+				Thread.currentThread().interrupt();
+			}
+			executor = null;
+		}
 
 		if (exporterFactory != null)
 		{
 			exporterFactory.shutdown();
 			exporterFactory = null;
-		}
-
-		if (executor != null)
-		{
-			executor.shutdownNow();
-			executor = null;
 		}
 
 		log.info("OSRS Data Exporter stopped");
@@ -120,6 +123,21 @@ public class OsrsDataExporterPlugin extends Plugin
 	OsrsDataExporterConfig provideConfig(ConfigManager configManager)
 	{
 		return configManager.getConfig(OsrsDataExporterConfig.class);
+	}
+
+	@Subscribe
+	public void onConfigChanged(ConfigChanged event)
+	{
+		if (!OsrsDataExporterConfig.CONFIG_GROUP.equals(event.getGroup()))
+		{
+			return;
+		}
+
+		if (OsrsDataExporterConfig.EXPORT_TARGET_KEYS.contains(event.getKey()))
+		{
+			log.debug("Export target config changed ({}), reinitializing exporters", event.getKey());
+			exporterFactory.init();
+		}
 	}
 
 	@Subscribe
@@ -136,20 +154,19 @@ public class OsrsDataExporterPlugin extends Plugin
 			return;
 		}
 
-		if (event.getContainerId() == InventoryID.BANK)
+		int containerId = event.getContainerId();
+		for (DataSourceHandler<?> handler : dataSources)
 		{
-			bankDataSource.handleContainerChange(
-				event.getItemContainer(), accountHash, executor, this::dispatchExport);
-		}
-		else if (event.getContainerId() == InventoryID.INV)
-		{
-			inventoryDataSource.handleContainerChange(
-				event.getItemContainer(), accountHash, executor, this::dispatchExport);
-		}
-		else if (event.getContainerId() == InventoryID.INV_GROUP_TEMP)
-		{
-			groupStorageDataSource.handleContainerChange(
-				event.getItemContainer(), accountHash, executor, this::dispatchExport);
+			if (handler instanceof ItemContainerDataSource)
+			{
+				ItemContainerDataSource<?> containerSource = (ItemContainerDataSource<?>) handler;
+				if (containerSource.getContainerId() == containerId)
+				{
+					containerSource.handleContainerChange(
+						event.getItemContainer(), accountHash, executor, this::dispatchExport);
+					return;
+				}
+			}
 		}
 	}
 
@@ -167,7 +184,14 @@ public class OsrsDataExporterPlugin extends Plugin
 			return;
 		}
 
-		skillsDataSource.handleStatChanged(accountHash, executor, this::dispatchExport);
+		for (DataSourceHandler<?> handler : dataSources)
+		{
+			if (handler.getDataType() == DataType.SKILLS)
+			{
+				((SkillsDataSource) handler).handleStatChanged(accountHash, executor, this::dispatchExport);
+				return;
+			}
+		}
 	}
 
 	/**

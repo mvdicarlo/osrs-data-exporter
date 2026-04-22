@@ -28,4 +28,10 @@ public abstract class ExportRecord
 	 * All records from the same export action share this timestamp.
 	 */
 	private final Instant timestamp;
+
+	/**
+	 * The data type this record represents.
+	 * Used by {@link ExportPayload} to derive routing metadata.
+	 */
+	private final DataType dataType;
 }

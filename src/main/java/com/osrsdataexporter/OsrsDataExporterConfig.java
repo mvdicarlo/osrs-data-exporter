@@ -1,5 +1,6 @@
 package com.osrsdataexporter;
 
+import java.util.Set;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
@@ -13,6 +14,9 @@ import net.runelite.client.config.ConfigSection;
 public interface OsrsDataExporterConfig extends Config
 {
 	String CONFIG_GROUP = "osrsdataexporter";
+
+	/** Config keys that control export targets — used to detect runtime changes. */
+	Set<String> EXPORT_TARGET_KEYS = Set.of("enableLocalStorage");
 
 	@ConfigSection(
 		name = "Data Sources",

@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.List;
 import net.runelite.api.Client;
 import net.runelite.api.ItemContainer;
+import net.runelite.api.gameval.InventoryID;
 
 /**
  * Data source for inventory snapshots.
@@ -17,7 +18,7 @@ public class InventoryDataSource extends ItemContainerDataSource<InventoryRecord
 {
 	public InventoryDataSource(Client client, OsrsDataExporterConfig config)
 	{
-		super(client, config, DataType.INVENTORY, 2000);
+		super(client, config, DataType.INVENTORY, ITEM_DEBOUNCE_DELAY_MS, InventoryID.INV);
 	}
 
 	@Override
@@ -31,6 +32,6 @@ public class InventoryDataSource extends ItemContainerDataSource<InventoryRecord
 	{
 		List<ItemEntry> entries = buildItemEntries(container.getItems());
 		InventoryRecord record = new InventoryRecord(accountHash, Instant.now(), entries);
-		return new ExportPayload<>(DataType.INVENTORY, record);
+		return new ExportPayload<>(record);
 	}
 }

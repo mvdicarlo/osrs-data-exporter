@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.List;
 import net.runelite.api.Client;
 import net.runelite.api.ItemContainer;
+import net.runelite.api.gameval.InventoryID;
 
 /**
  * Data source for Group Ironman shared storage snapshots.
@@ -17,7 +18,7 @@ public class GroupStorageDataSource extends ItemContainerDataSource<GroupStorage
 {
 	public GroupStorageDataSource(Client client, OsrsDataExporterConfig config)
 	{
-		super(client, config, DataType.GROUP_STORAGE, 2000);
+		super(client, config, DataType.GROUP_STORAGE, ITEM_DEBOUNCE_DELAY_MS, InventoryID.INV_GROUP_TEMP);
 	}
 
 	@Override
@@ -31,6 +32,6 @@ public class GroupStorageDataSource extends ItemContainerDataSource<GroupStorage
 	{
 		List<ItemEntry> entries = buildItemEntries(container.getItems());
 		GroupStorageRecord record = new GroupStorageRecord(accountHash, Instant.now(), entries);
-		return new ExportPayload<>(DataType.GROUP_STORAGE, record);
+		return new ExportPayload<>(record);
 	}
 }

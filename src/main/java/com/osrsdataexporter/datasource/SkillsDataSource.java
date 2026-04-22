@@ -22,7 +22,7 @@ public class SkillsDataSource extends DataSourceHandler<SkillsRecord>
 {
 	public SkillsDataSource(Client client, OsrsDataExporterConfig config)
 	{
-		super(client, config, DataType.SKILLS, 5000);
+		super(client, config, DataType.SKILLS, SKILLS_DEBOUNCE_DELAY_MS);
 	}
 
 	@Override
@@ -64,6 +64,6 @@ public class SkillsDataSource extends DataSourceHandler<SkillsRecord>
 		}
 
 		SkillsRecord record = new SkillsRecord(accountHash, Instant.now(), entries);
-		return new ExportPayload<>(DataType.SKILLS, record);
+		return new ExportPayload<>(record);
 	}
 }

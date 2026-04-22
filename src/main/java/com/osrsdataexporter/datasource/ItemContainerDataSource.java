@@ -22,9 +22,20 @@ import net.runelite.api.ItemContainer;
  */
 public abstract class ItemContainerDataSource<T extends ExportRecord> extends DataSourceHandler<T>
 {
-	protected ItemContainerDataSource(Client client, OsrsDataExporterConfig config, DataType dataType, long debounceDelayMs)
+	private final int containerId;
+
+	protected ItemContainerDataSource(Client client, OsrsDataExporterConfig config, DataType dataType, long debounceDelayMs, int containerId)
 	{
 		super(client, config, dataType, debounceDelayMs);
+		this.containerId = containerId;
+	}
+
+	/**
+	 * Returns the inventory container ID this data source monitors.
+	 */
+	public int getContainerId()
+	{
+		return containerId;
 	}
 
 	/**

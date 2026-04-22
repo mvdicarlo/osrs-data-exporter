@@ -1,26 +1,35 @@
 package com.osrsdataexporter.model;
 
-import lombok.Value;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 /**
  * Generic payload wrapper for exporting records to adapters.
- * Carries the record data along with metadata about the data type,
- * allowing adapters to route data to the correct storage location
- * (e.g. file name, table, or API endpoint).
+ * The data type is derived from the record at construction time,
+ * ensuring the pairing can never be inconsistent.
  *
  * @param <T> the specific {@link ExportRecord} subtype being exported
  */
-@Value
+@Getter
+@EqualsAndHashCode
+@ToString
 public class ExportPayload<T extends ExportRecord>
 {
 	/**
-	 * The type of data being exported.
-	 * Used by adapters to determine how/where to persist the data.
+	 * The type of data being exported, derived from the record.
+	 * Serialized into JSON for consumers that need routing metadata.
 	 */
-	DataType dataType;
+	private final DataType dataType;
 
 	/**
 	 * The record containing the actual data to export.
 	 */
-	T record;
+	private final T record;
+
+	public ExportPayload(T record)
+	{
+		this.record = record;
+		this.dataType = record.getDataType();
+	}
 }

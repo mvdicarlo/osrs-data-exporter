@@ -7,7 +7,6 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
 import com.osrsdataexporter.model.ItemEntry;
 import com.osrsdataexporter.model.BankRecord;
-import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
 import com.osrsdataexporter.model.GroupStorageRecord;
 import com.osrsdataexporter.model.InventoryRecord;
@@ -219,19 +218,19 @@ public class LocalStorageExporterTest
 	private ExportPayload<BankRecord> buildPayload(java.util.List<ItemEntry> items)
 	{
 		BankRecord record = new BankRecord(ACCOUNT_HASH, TIMESTAMP, items);
-		return new ExportPayload<>(DataType.BANK, record);
+		return new ExportPayload<>(record);
 	}
 
 	private ExportPayload<InventoryRecord> buildInventoryPayload(java.util.List<ItemEntry> items)
 	{
 		InventoryRecord record = new InventoryRecord(ACCOUNT_HASH, TIMESTAMP, items);
-		return new ExportPayload<>(DataType.INVENTORY, record);
+		return new ExportPayload<>(record);
 	}
 
 	private ExportPayload<SkillsRecord> buildSkillsPayload(java.util.List<SkillEntry> skills)
 	{
 		SkillsRecord record = new SkillsRecord(ACCOUNT_HASH, TIMESTAMP, skills);
-		return new ExportPayload<>(DataType.SKILLS, record);
+		return new ExportPayload<>(record);
 	}
 
 	private File expectedSkillsOutputFile()
@@ -305,7 +304,7 @@ public class LocalStorageExporterTest
 	private ExportPayload<GroupStorageRecord> buildGroupStoragePayload(java.util.List<ItemEntry> items)
 	{
 		GroupStorageRecord record = new GroupStorageRecord(ACCOUNT_HASH, TIMESTAMP, items);
-		return new ExportPayload<>(DataType.GROUP_STORAGE, record);
+		return new ExportPayload<>(record);
 	}
 
 	@Test
