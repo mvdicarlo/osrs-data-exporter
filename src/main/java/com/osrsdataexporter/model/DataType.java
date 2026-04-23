@@ -11,7 +11,8 @@ public enum DataType
 	INVENTORY("inventory"),
 	SKILLS("skills"),
 	GROUP_STORAGE("group-storage"),
-	EQUIPMENT("equipment");
+	EQUIPMENT("equipment"),
+	GRAND_EXCHANGE("grand-exchange");
 
 	private final String identifier;
 

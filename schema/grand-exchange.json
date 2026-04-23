@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/mvdicarlo/osrs-data-exporter/main/schema/grand-exchange.json",
+  "title": "Grand Exchange Export",
+  "description": "Schema for grand-exchange.json produced by the OSRS Data Exporter RuneLite plugin. One record is written per exportable state change, containing the full snapshot of all known GE slots at that point in time.",
+  "type": "object",
+  "required": ["dataType", "record"],
+  "additionalProperties": false,
+  "properties": {
+    "dataType": {
+      "type": "string",
+      "const": "GRAND_EXCHANGE",
+      "description": "Identifies this payload as a Grand Exchange offer snapshot."
+    },
+    "record": {
+      "type": "object",
+      "description": "The Grand Exchange offer record.",
+      "required": ["account", "timestamp", "offers"],
+      "additionalProperties": false,
+      "properties": {
+        "account": {
+          "$ref": "#/$defs/accountContext"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 UTC timestamp of when the snapshot was taken."
+        },
+        "offers": {
+          "type": "array",
+          "description": "All GE slots with a known state at the time of this snapshot. Empty slots are excluded.",
+          "items": {
+            "$ref": "#/$defs/grandExchangeOfferEntry"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "accountContext": {
+      "title": "AccountContext",
+      "description": "Identifies the player account associated with this export.",
+      "type": "object",
+      "required": ["accountHash"],
+      "additionalProperties": false,
+      "properties": {
+        "accountHash": {
+          "type": "integer",
+          "description": "Stable numeric account identifier from the RuneLite client API."
+        },
+        "characterName": {
+          "type": ["string", "null"],
+          "description": "In-game character name. May be null if the player object was not yet loaded."
+        }
+      }
+    },
+    "grandExchangeOfferEntry": {
+      "title": "GrandExchangeOfferEntry",
+      "description": "A Grand Exchange offer at an initial or terminal state.",
+      "type": "object",
+      "required": ["slot", "itemId", "itemName", "state", "buy", "price", "totalQuantity", "quantityTraded", "spent"],
+      "additionalProperties": false,
+      "properties": {
+        "slot": {
+          "type": "integer",
+          "description": "GE slot index (0–7).",
+          "minimum": 0,
+          "maximum": 7
+        },
+        "itemId": {
+          "type": "integer",
+          "description": "The item's unique ID as defined by the game engine.",
+          "minimum": 1
+        },
+        "itemName": {
+          "type": "string",
+          "description": "Human-readable name of the item."
+        },
+        "state": {
+          "type": "string",
+          "description": "The offer state that triggered this export.",
+          "enum": ["BUYING", "SELLING", "BOUGHT", "SOLD", "CANCELLED_BUY", "CANCELLED_SELL"]
+        },
+        "buy": {
+          "type": "boolean",
+          "description": "True if this is a buy offer, false if it is a sell offer."
+        },
+        "price": {
+          "type": "integer",
+          "description": "Price per item set by the player (coins).",
+          "minimum": 1
+        },
+        "totalQuantity": {
+          "type": "integer",
+          "description": "Total quantity ordered.",
+          "minimum": 1
+        },
+        "quantityTraded": {
+          "type": "integer",
+          "description": "Quantity transacted so far.",
+          "minimum": 0
+        },
+        "spent": {
+          "type": "integer",
+          "description": "Total coins spent (buy) or received (sell) so far.",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

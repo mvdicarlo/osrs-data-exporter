@@ -5,6 +5,7 @@ import com.google.inject.Provides;
 import com.osrsdataexporter.datasource.BankDataSource;
 import com.osrsdataexporter.datasource.DataSourceHandler;
 import com.osrsdataexporter.datasource.EquipmentDataSource;
+import com.osrsdataexporter.datasource.GrandExchangeDataSource;
 import com.osrsdataexporter.datasource.GroupStorageDataSource;
 import com.osrsdataexporter.datasource.InventoryDataSource;
 import com.osrsdataexporter.datasource.SkillsDataSource;
@@ -25,6 +26,7 @@ import net.runelite.api.Client;
 import net.runelite.api.Player;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.WorldType;
+import net.runelite.api.events.GrandExchangeOfferChanged;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.StatChanged;
 import net.runelite.client.callback.ClientThread;
@@ -94,6 +96,7 @@ public class OsrsDataExporterPlugin extends Plugin
 		dataSources.add(new GroupStorageDataSource(client, config));
 		dataSources.add(new SkillsDataSource(client, config));
 		dataSources.add(new EquipmentDataSource(client, config, itemManager));
+		dataSources.add(new GrandExchangeDataSource(client, config));
 
 		log.info("OSRS Data Exporter started");
 	}
@@ -161,6 +164,12 @@ public class OsrsDataExporterPlugin extends Plugin
 
 	@Subscribe
 	public void onStatChanged(StatChanged event)
+	{
+		routeEvent(event);
+	}
+
+	@Subscribe
+	public void onGrandExchangeOfferChanged(GrandExchangeOfferChanged event)
 	{
 		routeEvent(event);
 	}

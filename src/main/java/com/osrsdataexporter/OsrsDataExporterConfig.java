@@ -98,6 +98,18 @@ public interface OsrsDataExporterConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "exportGrandExchangeData",
+		name = "Export Grand Exchange Data",
+		description = "Export a record for each GE offer when it is placed, completed, or cancelled.",
+		section = dataSourcesSection,
+		position = 5
+	)
+	default boolean exportGrandExchangeData()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "enableLocalStorage",
 		name = "Enable Local Storage",
 		description = "Save exported data as JSON files in the .runelite/osrs-data-exporter directory.",
