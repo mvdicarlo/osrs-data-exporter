@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/mvdicarlo/osrs-data-exporter/main/schema/equipment.json",
+  "title": "Equipment Export",
+  "description": "Schema for equipment.json produced by the OSRS Data Exporter RuneLite plugin.",
+  "type": "object",
+  "required": ["dataType", "record"],
+  "additionalProperties": false,
+  "properties": {
+    "dataType": {
+      "type": "string",
+      "const": "EQUIPMENT",
+      "description": "Identifies this payload as an equipment snapshot."
+    },
+    "record": {
+      "type": "object",
+      "description": "The equipment snapshot record.",
+      "required": ["account", "timestamp", "items"],
+      "additionalProperties": false,
+      "properties": {
+        "account": {
+          "$ref": "#/$defs/accountContext"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 UTC timestamp of when the snapshot was taken (e.g. '2026-04-21T12:00:00Z')."
+        },
+        "items": {
+          "type": "array",
+          "description": "All equipped items at the time of the snapshot.",
+          "items": {
+            "$ref": "#/$defs/equipmentItemEntry"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "accountContext": {
+      "title": "AccountContext",
+      "description": "Identifies the player account associated with this export.",
+      "type": "object",
+      "required": ["accountHash"],
+      "additionalProperties": false,
+      "properties": {
+        "accountHash": {
+          "type": "integer",
+          "description": "Stable numeric account identifier from the RuneLite client API."
+        },
+        "characterName": {
+          "type": ["string", "null"],
+          "description": "In-game character name. May be null if the player object was not yet loaded at snapshot time."
+        }
+      }
+    },
+    "equipmentItemEntry": {
+      "title": "EquipmentItemEntry",
+      "description": "A single item in the equipment snapshot.",
+      "type": "object",
+      "required": ["itemId", "itemName", "quantity", "members", "tradeable", "price"],
+      "additionalProperties": false,
+      "properties": {
+        "itemId": {
+          "type": "integer",
+          "description": "The item's unique ID as defined by the game engine.",
+          "minimum": 1
+        },
+        "itemName": {
+          "type": "string",
+          "description": "The human-readable name of the item."
+        },
+        "quantity": {
+          "type": "integer",
+          "description": "The stack size / quantity of this item.",
+          "minimum": 1
+        },
+        "members": {
+          "type": "boolean",
+          "description": "Whether this item is members-only."
+        },
+        "tradeable": {
+          "type": "boolean",
+          "description": "Whether this item can be traded between players."
+        },
+        "price": {
+          "type": "integer",
+          "description": "The base store price of this item in coins.",
+          "minimum": 0
+        },
+        "stats": {
+          "oneOf": [
+            {"$ref": "#/$defs/equipmentStats"},
+            {"type": "null"}
+          ],
+          "description": "Combat and defence stats for this item. Null if the item has no equipment stats."
+        }
+      }
+    },
+    "equipmentStats": {
+      "title": "EquipmentStats",
+      "description": "Combat and defensive bonuses for an equipped item.",
+      "type": "object",
+      "required": [
+        "attackStab", "attackSlash", "attackCrush", "attackMagic", "attackRanged",
+        "defenceStab", "defenceSlash", "defenceCrush", "defenceMagic", "defenceRanged",
+        "meleeStrength", "rangedStrength", "magicDamage", "prayer", "attackSpeed", "slot", "twoHanded"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "attackStab":      {"type": "integer", "description": "Stab attack bonus."},
+        "attackSlash":     {"type": "integer", "description": "Slash attack bonus."},
+        "attackCrush":     {"type": "integer", "description": "Crush attack bonus."},
+        "attackMagic":     {"type": "integer", "description": "Magic attack bonus."},
+        "attackRanged":    {"type": "integer", "description": "Ranged attack bonus."},
+        "defenceStab":     {"type": "integer", "description": "Stab defence bonus."},
+        "defenceSlash":    {"type": "integer", "description": "Slash defence bonus."},
+        "defenceCrush":    {"type": "integer", "description": "Crush defence bonus."},
+        "defenceMagic":    {"type": "integer", "description": "Magic defence bonus."},
+        "defenceRanged":   {"type": "integer", "description": "Ranged defence bonus."},
+        "meleeStrength":   {"type": "integer", "description": "Melee strength bonus."},
+        "rangedStrength":  {"type": "integer", "description": "Ranged strength bonus."},
+        "magicDamage":     {"type": "number", "description": "Magic damage bonus as a decimal (e.g. 0.1 = +10%)."},
+        "prayer":          {"type": "integer", "description": "Prayer bonus."},
+        "attackSpeed":     {"type": "integer", "description": "Attack speed in game ticks (0 = not applicable)."},
+        "slot":            {"type": "integer", "description": "Equipment slot index (0=head, 1=cape, 2=neck, 3=weapon, 4=body, 5=shield, 7=legs, 9=gloves, 10=boots, 12=ring, 13=ammo).", "minimum": 0},
+        "twoHanded":       {"type": "boolean", "description": "Whether this is a two-handed weapon, occupying both the weapon and shield slots."}
+      }
+    }
+  }
+}

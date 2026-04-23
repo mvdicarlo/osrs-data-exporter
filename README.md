@@ -13,6 +13,7 @@ A [RuneLite](https://runelite.net/) plugin that exports OSRS account data to con
 - **Inventory Export** — Snapshots inventory contents whenever the inventory changes
 - **Skills Export** — Snapshots all skill levels and XP whenever a stat changes (5 second debounce)
 - **Group Storage Export** — Snapshots Group Ironman shared storage whenever it is updated
+- **Equipment Export** — Snapshots worn gear with full combat and defence stats whenever equipment changes
 - **Local Storage** — Writes JSON files to `~/.runelite/osrs-data-exporter/{accountHash}/`
 - **Azure Blob Storage** — Uploads payload JSON files to an Azure Storage container using a connection string
 - **Smart Debounce** — Rapid changes are coalesced into a single export (2s for items, 5s for skills)
@@ -36,6 +37,7 @@ Found under the **OSRS Data Exporter** section in RuneLite settings:
 | Export Inventory Data | Data Sources | Enabled | Export inventory snapshot on each update |
 | Export Skills Data | Data Sources | Enabled | Export skills snapshot on each stat change |
 | Export Group Storage Data | Data Sources | Enabled | Export GIM shared storage snapshot on each update |
+| Export Equipment Data | Data Sources | Enabled | Export worn gear with combat stats on each equipment change |
 | Enable Local Storage | Export Targets | Enabled | Write JSON to the local `.runelite` directory |
 | Enable Azure Blob Storage | Export Targets | Disabled | Upload JSON payloads to an Azure Blob container |
 | Azure Blob Connection String | Export Targets | Empty | Azure Storage connection string (secret) |
@@ -51,7 +53,8 @@ Each export target writes data per account. For local storage, files are at:
       ├── bank.json
       ├── inventory.json
       ├── group-storage.json
-      └── skills.json
+      ├── skills.json
+      └── equipment.json
 ```
 
 Example `bank.json`:
@@ -89,6 +92,52 @@ Example `bank.json`:
 
 > **Note:** `price` is the base store price in coins. High alch = `floor(price × 0.6)`, low alch = `floor(price × 0.4)`.
 
+Example `equipment.json`:
+
+```json
+{
+  "dataType": "EQUIPMENT",
+  "record": {
+    "account": {
+      "accountHash": 123456789,
+      "characterName": "Zezima"
+    },
+    "timestamp": "2026-04-21T12:00:00Z",
+    "items": [
+      {
+        "itemId": 6570,
+        "itemName": "Fire cape",
+        "quantity": 1,
+        "members": true,
+        "tradeable": false,
+        "price": 0,
+        "stats": {
+          "attackStab": 0,
+          "attackSlash": 0,
+          "attackCrush": 0,
+          "attackMagic": 1,
+          "attackRanged": 0,
+          "defenceStab": 11,
+          "defenceSlash": 11,
+          "defenceCrush": 11,
+          "defenceMagic": 11,
+          "defenceRanged": 11,
+          "meleeStrength": 4,
+          "rangedStrength": 0,
+          "magicDamage": 0.0,
+          "prayer": 2,
+          "attackSpeed": 0,
+          "slot": 1,
+          "twoHanded": false
+        }
+      }
+    ]
+  }
+}
+```
+
+> **Note:** `magicDamage` is a float representing the bonus as a decimal (e.g. `0.1` = +10%). `slot` follows the equipment slot indices used by the game engine (1 = cape, 3 = weapon, 4 = body, etc.).
+
 ### JSON Schemas
 
 Machine-readable JSON Schemas ([draft-07](http://json-schema.org/draft-07/schema)) are provided for all exported files. Use them for validation, IDE autocomplete, or code generation:
@@ -99,6 +148,7 @@ Machine-readable JSON Schemas ([draft-07](http://json-schema.org/draft-07/schema
 | `inventory.json` | [schema/inventory.json](schema/inventory.json) |
 | `group-storage.json` | [schema/group-storage.json](schema/group-storage.json) |
 | `skills.json` | [schema/skills.json](schema/skills.json) |
+| `equipment.json` | [schema/equipment.json](schema/equipment.json) |
 
 ## Building
 

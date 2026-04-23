@@ -86,6 +86,18 @@ public interface OsrsDataExporterConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "exportEquipmentData",
+		name = "Export Equipment Data",
+		description = "Export a snapshot of worn equipment, including combat stats, whenever gear changes.",
+		section = dataSourcesSection,
+		position = 4
+	)
+	default boolean exportEquipmentData()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "enableLocalStorage",
 		name = "Enable Local Storage",
 		description = "Save exported data as JSON files in the .runelite/osrs-data-exporter directory.",

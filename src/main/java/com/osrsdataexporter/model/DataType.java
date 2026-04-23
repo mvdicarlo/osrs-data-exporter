@@ -10,7 +10,8 @@ public enum DataType
 	BANK("bank"),
 	INVENTORY("inventory"),
 	SKILLS("skills"),
-	GROUP_STORAGE("group-storage");
+	GROUP_STORAGE("group-storage"),
+	EQUIPMENT("equipment");
 
 	private final String identifier;
 

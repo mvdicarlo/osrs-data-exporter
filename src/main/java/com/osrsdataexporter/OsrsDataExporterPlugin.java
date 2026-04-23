@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Provides;
 import com.osrsdataexporter.datasource.BankDataSource;
 import com.osrsdataexporter.datasource.DataSourceHandler;
+import com.osrsdataexporter.datasource.EquipmentDataSource;
 import com.osrsdataexporter.datasource.GroupStorageDataSource;
 import com.osrsdataexporter.datasource.InventoryDataSource;
 import com.osrsdataexporter.datasource.SkillsDataSource;
@@ -30,6 +31,7 @@ import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
@@ -66,6 +68,9 @@ public class OsrsDataExporterPlugin extends Plugin
 	@Inject
 	private ClientThread clientThread;
 
+	@Inject
+	private ItemManager itemManager;
+
 	private ScheduledExecutorService executor;
 	private DataExporterFactory exporterFactory;
 	private final List<DataSourceHandler<?>> dataSources = new ArrayList<>();
@@ -88,6 +93,7 @@ public class OsrsDataExporterPlugin extends Plugin
 		dataSources.add(new InventoryDataSource(client, config));
 		dataSources.add(new GroupStorageDataSource(client, config));
 		dataSources.add(new SkillsDataSource(client, config));
+		dataSources.add(new EquipmentDataSource(client, config, itemManager));
 
 		log.info("OSRS Data Exporter started");
 	}
