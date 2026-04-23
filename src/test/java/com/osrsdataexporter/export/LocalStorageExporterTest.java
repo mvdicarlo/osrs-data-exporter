@@ -60,7 +60,7 @@ public class LocalStorageExporterTest
 	public void export_createsDirectoryAndWritesFile() throws IOException
 	{
 		ExportPayload<BankRecord> payload = buildPayload(Collections.singletonList(
-			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560)
+			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560, null, null)
 		));
 
 		exporter.export(payload);
@@ -76,8 +76,8 @@ public class LocalStorageExporterTest
 	public void export_writesCorrectJsonStructure() throws IOException
 	{
 		ExportPayload<BankRecord> payload = buildPayload(Arrays.asList(
-			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560),
-			new ItemEntry(995, "Coins", 50000, false, true, 1)
+			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560, null, null),
+			new ItemEntry(995, "Coins", 50000, false, true, 1, null, null)
 		));
 
 		exporter.export(payload);
@@ -95,7 +95,7 @@ public class LocalStorageExporterTest
 	public void export_writesCorrectItemData() throws IOException
 	{
 		ExportPayload<BankRecord> payload = buildPayload(Collections.singletonList(
-			new ItemEntry(4151, "Abyssal whip", 3, true, true, 2560)
+			new ItemEntry(4151, "Abyssal whip", 3, true, true, 2560, null, null)
 		));
 
 		exporter.export(payload);
@@ -115,12 +115,12 @@ public class LocalStorageExporterTest
 	public void export_overwritesExistingFile() throws IOException
 	{
 		ExportPayload<BankRecord> firstPayload = buildPayload(Collections.singletonList(
-			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560)
+			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560, null, null)
 		));
 		exporter.export(firstPayload);
 
 		ExportPayload<BankRecord> secondPayload = buildPayload(Collections.singletonList(
-			new ItemEntry(995, "Coins", 99999, false, true, 1)
+			new ItemEntry(995, "Coins", 99999, false, true, 1, null, null)
 		));
 		exporter.export(secondPayload);
 
@@ -174,8 +174,8 @@ public class LocalStorageExporterTest
 	public void export_inventoryWritesCorrectFile() throws IOException
 	{
 		ExportPayload<InventoryRecord> payload = buildInventoryPayload(Arrays.asList(
-			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560),
-			new ItemEntry(385, "Shark", 10, true, true, 200)
+			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560, null, null),
+			new ItemEntry(385, "Shark", 10, true, true, 200, null, null)
 		));
 
 		exporter.export(payload);
@@ -197,10 +197,10 @@ public class LocalStorageExporterTest
 	public void export_inventoryAndBankWriteSeparateFiles() throws IOException
 	{
 		exporter.export(buildPayload(Collections.singletonList(
-			new ItemEntry(995, "Coins", 50000, false, true, 1)
+			new ItemEntry(995, "Coins", 50000, false, true, 1, null, null)
 		)));
 		exporter.export(buildInventoryPayload(Collections.singletonList(
-			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560)
+			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560, null, null)
 		)));
 
 		assertTrue("Bank file should exist", expectedOutputFile().exists());
@@ -313,8 +313,8 @@ public class LocalStorageExporterTest
 	public void export_groupStorageWritesCorrectFile() throws IOException
 	{
 		ExportPayload<GroupStorageRecord> payload = buildGroupStoragePayload(Arrays.asList(
-			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560),
-			new ItemEntry(385, "Shark", 25, true, true, 200)
+			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560, null, null),
+			new ItemEntry(385, "Shark", 25, true, true, 200, null, null)
 		));
 
 		exporter.export(payload);
@@ -336,10 +336,10 @@ public class LocalStorageExporterTest
 	public void export_groupStorageWritesSeparateFromBank() throws IOException
 	{
 		exporter.export(buildPayload(Collections.singletonList(
-			new ItemEntry(995, "Coins", 50000, false, true, 1)
+			new ItemEntry(995, "Coins", 50000, false, true, 1, null, null)
 		)));
 		exporter.export(buildGroupStoragePayload(Collections.singletonList(
-			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560)
+			new ItemEntry(4151, "Abyssal whip", 1, true, true, 2560, null, null)
 		)));
 
 		assertTrue("Bank file should exist", expectedOutputFile().exists());

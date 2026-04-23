@@ -87,6 +87,25 @@
           "type": "integer",
           "description": "The base store price of this item in coins. High alch value = floor(price * 0.6). Low alch value = floor(price * 0.4).",
           "minimum": 0
+        },
+        "contents": {
+          "oneOf": [
+            {
+              "type": "array",
+              "description": "Inner contents of this item if it is a container (e.g. Rune Pouch, Looting Bag). Null for non-container items.",
+              "items": { "$ref": "#/$defs/itemEntry" }
+            },
+            { "type": "null" }
+          ]
+        },
+        "containerItemId": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "description": "The item ID of the container this item was unpacked from. Null for top-level items."
+            },
+            { "type": "null" }
+          ]
         }
       }
     }

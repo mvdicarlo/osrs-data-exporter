@@ -1,6 +1,7 @@
 package com.osrsdataexporter.datasource;
 
 import com.osrsdataexporter.OsrsDataExporterConfig;
+import com.osrsdataexporter.datasource.unpacker.ItemUnpackerRegistry;
 import com.osrsdataexporter.model.AccountContext;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
@@ -25,11 +26,13 @@ import net.runelite.api.events.ItemContainerChanged;
 public abstract class ItemContainerDataSource<T extends ExportRecord> extends DataSourceHandler<T>
 {
 	private final int containerId;
+	private final ItemUnpackerRegistry unpackerRegistry;
 
-	protected ItemContainerDataSource(Client client, OsrsDataExporterConfig config, DataType dataType, long debounceDelayMs, int containerId)
+	protected ItemContainerDataSource(Client client, OsrsDataExporterConfig config, DataType dataType, long debounceDelayMs, int containerId, ItemUnpackerRegistry unpackerRegistry)
 	{
 		super(client, config, dataType, debounceDelayMs);
 		this.containerId = containerId;
+		this.unpackerRegistry = unpackerRegistry;
 	}
 
 	/**
@@ -72,6 +75,8 @@ public abstract class ItemContainerDataSource<T extends ExportRecord> extends Da
 	/**
 	 * Converts raw items into {@link ItemEntry} records,
 	 * resolving composition data from the cache.
+	 * Container items (e.g. Rune Pouch, Looting Bag) are automatically
+	 * enriched with their inner contents via the {@link ItemUnpackerRegistry}.
 	 */
 	protected List<ItemEntry> buildItemEntries(Item[] items)
 	{
@@ -88,8 +93,10 @@ public abstract class ItemContainerDataSource<T extends ExportRecord> extends Da
 			}
 
 			ItemComposition composition = client.getItemDefinition(id);
+			List<ItemEntry> contents = unpackerRegistry.tryUnpack(id, client);
 			entries.add(new ItemEntry(id, composition.getName(), quantity,
-				composition.isMembers(), composition.isTradeable(), composition.getPrice()));
+				composition.isMembers(), composition.isTradeable(), composition.getPrice(),
+				contents, null));
 		}
 
 		return entries;

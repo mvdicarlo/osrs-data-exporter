@@ -1,6 +1,7 @@
 package com.osrsdataexporter.datasource;
 
 import com.osrsdataexporter.OsrsDataExporterConfig;
+import com.osrsdataexporter.datasource.unpacker.ItemUnpackerRegistry;
 import com.osrsdataexporter.model.AccountContext;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.EquipmentItemEntry;
@@ -27,9 +28,9 @@ public class EquipmentDataSource extends ItemContainerDataSource<EquipmentRecord
 {
 	private final ItemManager itemManager;
 
-	public EquipmentDataSource(Client client, OsrsDataExporterConfig config, ItemManager itemManager)
+	public EquipmentDataSource(Client client, OsrsDataExporterConfig config, ItemManager itemManager, ItemUnpackerRegistry unpackerRegistry)
 	{
-		super(client, config, DataType.EQUIPMENT, ITEM_DEBOUNCE_DELAY_MS, InventoryID.WORN);
+		super(client, config, DataType.EQUIPMENT, ITEM_DEBOUNCE_DELAY_MS, InventoryID.WORN, unpackerRegistry);
 		this.itemManager = itemManager;
 	}
 

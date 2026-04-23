@@ -36,13 +36,19 @@ public class GrandExchangeDataSource extends DataSourceHandler<GrandExchangeReco
 
 	public GrandExchangeDataSource(Client client, OsrsDataExporterConfig config)
 	{
-		super(client, config, DataType.GRAND_EXCHANGE, 0);
+		super(client, config, DataType.GRAND_EXCHANGE, ITEM_DEBOUNCE_DELAY_MS);
 	}
 
 	@Override
 	public boolean isEnabled()
 	{
 		return config.exportGrandExchangeData();
+	}
+
+	@Override
+	public void onAccountChanged()
+	{
+		slotMap.clear();
 	}
 
 	@Override

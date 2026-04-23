@@ -1,5 +1,6 @@
 package com.osrsdataexporter.model;
 
+import java.util.List;
 import lombok.Value;
 
 /**
@@ -40,4 +41,16 @@ public class ItemEntry
 	 * and low alchemy value as {@code floor(price * 0.4)}.
 	 */
 	int price;
+
+	/**
+	 * Inner contents of this item if it is a container (e.g. Rune Pouch, Looting Bag).
+	 * {@code null} for items that are not containers or whose contents cannot be read.
+	 */
+	List<ItemEntry> contents;
+
+	/**
+	 * The item ID of the container this item was unpacked from.
+	 * {@code null} for top-level items that are not inside a container.
+	 */
+	Integer containerItemId;
 }

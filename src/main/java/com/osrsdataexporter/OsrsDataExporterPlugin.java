@@ -9,6 +9,8 @@ import com.osrsdataexporter.datasource.GrandExchangeDataSource;
 import com.osrsdataexporter.datasource.GroupStorageDataSource;
 import com.osrsdataexporter.datasource.InventoryDataSource;
 import com.osrsdataexporter.datasource.SkillsDataSource;
+import com.osrsdataexporter.datasource.unpacker.ItemUnpackerRegistry;
+import com.osrsdataexporter.datasource.unpacker.RunePouchUnpacker;
 import com.osrsdataexporter.export.DataExporter;
 import com.osrsdataexporter.export.DataExporterFactory;
 import com.osrsdataexporter.model.AccountContext;
@@ -76,6 +78,7 @@ public class OsrsDataExporterPlugin extends Plugin
 	private ScheduledExecutorService executor;
 	private DataExporterFactory exporterFactory;
 	private final List<DataSourceHandler<?>> dataSources = new ArrayList<>();
+	private long lastSeenAccountHash = -1;
 
 	@Override
 	protected void startUp()
@@ -91,11 +94,14 @@ public class OsrsDataExporterPlugin extends Plugin
 		exporterFactory.init();
 		reportInitErrors();
 
-		dataSources.add(new BankDataSource(client, config));
-		dataSources.add(new InventoryDataSource(client, config));
-		dataSources.add(new GroupStorageDataSource(client, config));
+		ItemUnpackerRegistry unpackerRegistry = new ItemUnpackerRegistry();
+		unpackerRegistry.register(new RunePouchUnpacker());
+
+		dataSources.add(new BankDataSource(client, config, unpackerRegistry));
+		dataSources.add(new InventoryDataSource(client, config, unpackerRegistry));
+		dataSources.add(new GroupStorageDataSource(client, config, unpackerRegistry));
 		dataSources.add(new SkillsDataSource(client, config));
-		dataSources.add(new EquipmentDataSource(client, config, itemManager));
+		dataSources.add(new EquipmentDataSource(client, config, itemManager, unpackerRegistry));
 		dataSources.add(new GrandExchangeDataSource(client, config));
 
 		log.info("OSRS Data Exporter started");
@@ -106,6 +112,7 @@ public class OsrsDataExporterPlugin extends Plugin
 	{
 		dataSources.forEach(DataSourceHandler::shutdown);
 		dataSources.clear();
+		lastSeenAccountHash = -1;
 
 		if (executor != null)
 		{
@@ -189,6 +196,13 @@ public class OsrsDataExporterPlugin extends Plugin
 		if (accountHash == -1)
 		{
 			return;
+		}
+
+		if (accountHash != lastSeenAccountHash)
+		{
+			log.debug("Account changed ({} -> {}), resetting handler state", lastSeenAccountHash, accountHash);
+			lastSeenAccountHash = accountHash;
+			dataSources.forEach(DataSourceHandler::onAccountChanged);
 		}
 
 		Player localPlayer = client.getLocalPlayer();

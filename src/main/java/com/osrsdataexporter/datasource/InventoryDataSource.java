@@ -1,6 +1,7 @@
 package com.osrsdataexporter.datasource;
 
 import com.osrsdataexporter.OsrsDataExporterConfig;
+import com.osrsdataexporter.datasource.unpacker.ItemUnpackerRegistry;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
 import com.osrsdataexporter.model.InventoryRecord;
@@ -17,9 +18,9 @@ import com.osrsdataexporter.model.AccountContext;
  */
 public class InventoryDataSource extends ItemContainerDataSource<InventoryRecord>
 {
-	public InventoryDataSource(Client client, OsrsDataExporterConfig config)
+	public InventoryDataSource(Client client, OsrsDataExporterConfig config, ItemUnpackerRegistry unpackerRegistry)
 	{
-		super(client, config, DataType.INVENTORY, ITEM_DEBOUNCE_DELAY_MS, InventoryID.INV);
+		super(client, config, DataType.INVENTORY, ITEM_DEBOUNCE_DELAY_MS, InventoryID.INV, unpackerRegistry);
 	}
 
 	@Override

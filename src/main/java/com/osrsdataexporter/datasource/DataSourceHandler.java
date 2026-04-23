@@ -103,6 +103,15 @@ public abstract class DataSourceHandler<T extends ExportRecord>
 	}
 
 	/**
+	 * Called when the active account hash changes (e.g. switching characters or logging out
+	 * and back in on a different account). Subclasses with per-account in-memory state
+	 * should override this to clear that state.
+	 */
+	public void onAccountChanged()
+	{
+	}
+
+	/**
 	 * Cancels any pending debounced export.
 	 */
 	public void shutdown()

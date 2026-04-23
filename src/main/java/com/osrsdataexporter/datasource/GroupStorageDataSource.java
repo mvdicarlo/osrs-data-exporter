@@ -1,6 +1,7 @@
 package com.osrsdataexporter.datasource;
 
 import com.osrsdataexporter.OsrsDataExporterConfig;
+import com.osrsdataexporter.datasource.unpacker.ItemUnpackerRegistry;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
 import com.osrsdataexporter.model.GroupStorageRecord;
@@ -17,9 +18,9 @@ import com.osrsdataexporter.model.AccountContext;
  */
 public class GroupStorageDataSource extends ItemContainerDataSource<GroupStorageRecord>
 {
-	public GroupStorageDataSource(Client client, OsrsDataExporterConfig config)
+	public GroupStorageDataSource(Client client, OsrsDataExporterConfig config, ItemUnpackerRegistry unpackerRegistry)
 	{
-		super(client, config, DataType.GROUP_STORAGE, ITEM_DEBOUNCE_DELAY_MS, InventoryID.INV_GROUP_TEMP);
+		super(client, config, DataType.GROUP_STORAGE, ITEM_DEBOUNCE_DELAY_MS, InventoryID.INV_GROUP_TEMP, unpackerRegistry);
 	}
 
 	@Override

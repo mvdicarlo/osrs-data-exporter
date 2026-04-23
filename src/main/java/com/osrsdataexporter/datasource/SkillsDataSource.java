@@ -41,6 +41,12 @@ public class SkillsDataSource extends DataSourceHandler<SkillsRecord>
 	}
 
 	@Override
+	public void onAccountChanged()
+	{
+		lastKnownXp.clear();
+	}
+
+	@Override
 	public boolean canHandle(Object event)
 	{
 		return event instanceof StatChanged;

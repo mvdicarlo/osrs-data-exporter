@@ -1,6 +1,7 @@
 package com.osrsdataexporter.datasource;
 
 import com.osrsdataexporter.OsrsDataExporterConfig;
+import com.osrsdataexporter.datasource.unpacker.ItemUnpackerRegistry;
 import com.osrsdataexporter.model.BankRecord;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
@@ -17,9 +18,9 @@ import com.osrsdataexporter.model.AccountContext;
  */
 public class BankDataSource extends ItemContainerDataSource<BankRecord>
 {
-	public BankDataSource(Client client, OsrsDataExporterConfig config)
+	public BankDataSource(Client client, OsrsDataExporterConfig config, ItemUnpackerRegistry unpackerRegistry)
 	{
-		super(client, config, DataType.BANK, ITEM_DEBOUNCE_DELAY_MS, InventoryID.BANK);
+		super(client, config, DataType.BANK, ITEM_DEBOUNCE_DELAY_MS, InventoryID.BANK, unpackerRegistry);
 	}
 
 	@Override
