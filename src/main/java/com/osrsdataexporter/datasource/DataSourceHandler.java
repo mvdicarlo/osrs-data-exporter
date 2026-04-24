@@ -22,10 +22,10 @@ import net.runelite.api.Client;
 public abstract class DataSourceHandler<T extends ExportRecord>
 {
 	/** Debounce delay for item container changes (bank, inventory, group storage). */
-	protected static final long ITEM_DEBOUNCE_DELAY_MS = 2000;
+	protected static final long ITEM_DEBOUNCE_DELAY_MS = 6_000;
 
-	/** Debounce delay for skill changes — longer because XP ticks fire rapidly. */
-	protected static final long SKILLS_DEBOUNCE_DELAY_MS = 5000;
+	/** Debounce delay for skill changes. */
+	protected static final long SKILLS_DEBOUNCE_DELAY_MS = 10_000;
 
 	protected final Client client;
 	protected final OsrsDataExporterConfig config;
