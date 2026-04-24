@@ -70,7 +70,7 @@ public interface OsrsDataExporterConfig extends Config
 	)
 	default boolean exportSkillsData()
 	{
-		return true;
+		return false;
 	}
 
 	@ConfigItem(
