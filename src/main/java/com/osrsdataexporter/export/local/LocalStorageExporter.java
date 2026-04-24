@@ -1,9 +1,11 @@
-package com.osrsdataexporter.export;
+package com.osrsdataexporter.export.local;
 
 import com.google.gson.Gson;
+import com.osrsdataexporter.export.DataExporter;
+import com.osrsdataexporter.export.ExportType;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
-import com.osrsdataexporter.model.ExportRecord;
+import com.osrsdataexporter.model.record.ExportRecord;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;

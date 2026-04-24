@@ -1,4 +1,4 @@
-package com.osrsdataexporter.model;
+package com.osrsdataexporter.model.entry;
 
 import java.util.List;
 import lombok.Value;

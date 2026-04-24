@@ -1,5 +1,8 @@
-package com.osrsdataexporter.model;
+package com.osrsdataexporter.model.record;
 
+import com.osrsdataexporter.model.AccountContext;
+import com.osrsdataexporter.model.DataType;
+import com.osrsdataexporter.model.entry.EquipmentItemEntry;
 import java.time.Instant;
 import java.util.List;
 import lombok.EqualsAndHashCode;

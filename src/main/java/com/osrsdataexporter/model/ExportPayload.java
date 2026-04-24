@@ -1,5 +1,6 @@
 package com.osrsdataexporter.model;
 
+import com.osrsdataexporter.model.record.ExportRecord;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

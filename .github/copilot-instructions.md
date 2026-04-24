@@ -12,9 +12,10 @@ You are working on the OSRS Data Exporter, a RuneLite plugin that exports OSRS a
 
 ## Architecture
 
-- **Models** — `ExportRecord` (abstract base with accountHash + timestamp) → `BankRecord`, `InventoryRecord`. Shared `ItemEntry` for item data. `ExportPayload<T>` wraps a `DataType` enum + record.
-- **Exporters** — `DataExporter` interface → `LocalStorageExporter` (writes JSON to `~/.runelite/osrs-data-exporter/{accountHash}/`). Factory creates exporters based on config.
-- **Plugin** — Listens to `ItemContainerChanged` events, routes by `InventoryID`, snapshots data on client thread, dispatches via debounced background executor.
+- **Models** — `model/` contains shared types (`AccountContext`, `DataType`, `ExportPayload`). `model/record/` has `ExportRecord` (abstract base) → `BankRecord`, `InventoryRecord`, `EquipmentRecord`, etc. `model/entry/` has item-level types: `ItemEntry`, `EquipmentItemEntry`, `EquipmentStatsEntry`, `SkillEntry`, `GrandExchangeOfferEntry`.
+- **Exporters** — `export/` has the `DataExporter` interface, `ExportType` enum, and `DataExporterFactory`. Implementations live in subpackages: `export/local/LocalStorageExporter`, `export/azure/AzureBlobStorageExporter`.
+- **Data Sources** — `datasource/` has abstract bases (`DataSourceHandler`, `ItemContainerDataSource`) and non-item-container sources (`SkillsDataSource`, `GrandExchangeDataSource`). `datasource/itemcontainer/` has concrete item container sources (`BankDataSource`, `InventoryDataSource`, `EquipmentDataSource`, `GroupStorageDataSource`). `datasource/unpacker/` has the `ItemUnpacker` SPI + `RunePouchUnpacker`.
+- **Plugin** — Listens to `ItemContainerChanged`, `StatChanged`, and `GrandExchangeOfferChanged` events, routes by handler, snapshots data on client thread, dispatches via debounced background executor.
 - **Config** — `OsrsDataExporterConfig` with sections for Data Sources (toggles per data type) and Export Targets (toggles per adapter).
 
 ## Build & Test

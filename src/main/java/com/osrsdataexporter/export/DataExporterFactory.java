@@ -2,6 +2,8 @@ package com.osrsdataexporter.export;
 
 import com.google.gson.Gson;
 import com.osrsdataexporter.OsrsDataExporterConfig;
+import com.osrsdataexporter.export.azure.AzureBlobStorageExporter;
+import com.osrsdataexporter.export.local.LocalStorageExporter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;

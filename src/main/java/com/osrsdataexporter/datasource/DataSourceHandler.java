@@ -4,7 +4,7 @@ import com.osrsdataexporter.OsrsDataExporterConfig;
 import com.osrsdataexporter.model.AccountContext;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
-import com.osrsdataexporter.model.ExportRecord;
+import com.osrsdataexporter.model.record.ExportRecord;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;

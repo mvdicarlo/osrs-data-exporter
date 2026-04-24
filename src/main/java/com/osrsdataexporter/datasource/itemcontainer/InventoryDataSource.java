@@ -1,11 +1,12 @@
-package com.osrsdataexporter.datasource;
+package com.osrsdataexporter.datasource.itemcontainer;
 
 import com.osrsdataexporter.OsrsDataExporterConfig;
+import com.osrsdataexporter.datasource.ItemContainerDataSource;
 import com.osrsdataexporter.datasource.unpacker.ItemUnpackerRegistry;
 import com.osrsdataexporter.model.DataType;
 import com.osrsdataexporter.model.ExportPayload;
-import com.osrsdataexporter.model.InventoryRecord;
-import com.osrsdataexporter.model.ItemEntry;
+import com.osrsdataexporter.model.record.InventoryRecord;
+import com.osrsdataexporter.model.entry.ItemEntry;
 import java.time.Instant;
 import java.util.List;
 import net.runelite.api.Client;

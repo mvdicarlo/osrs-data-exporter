@@ -1,4 +1,4 @@
-package com.osrsdataexporter.model;
+package com.osrsdataexporter.model.entry;
 
 import lombok.Value;
 
@@ -20,5 +20,5 @@ public class EquipmentItemEntry
 	 * Combat and defensive stats for this item.
 	 * {@code null} if the item has no equipment stats (e.g. an ammo stack with no explicit stats).
 	 */
-	EquipmentStats stats;
+	EquipmentStatsEntry stats;
 }

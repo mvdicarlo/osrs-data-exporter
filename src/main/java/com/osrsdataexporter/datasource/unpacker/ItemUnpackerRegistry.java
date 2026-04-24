@@ -1,6 +1,6 @@
 package com.osrsdataexporter.datasource.unpacker;
 
-import com.osrsdataexporter.model.ItemEntry;
+import com.osrsdataexporter.model.entry.ItemEntry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

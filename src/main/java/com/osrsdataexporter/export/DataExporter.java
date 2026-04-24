@@ -1,7 +1,7 @@
 package com.osrsdataexporter.export;
 
 import com.osrsdataexporter.model.ExportPayload;
-import com.osrsdataexporter.model.ExportRecord;
+import com.osrsdataexporter.model.record.ExportRecord;
 
 /**
  * Interface for all data export adapters.

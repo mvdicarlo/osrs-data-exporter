@@ -98,7 +98,7 @@
       }
     },
     "equipmentStats": {
-      "title": "EquipmentStats",
+      "title": "EquipmentStatsEntry",
       "description": "Combat and defensive bonuses for an equipped item.",
       "type": "object",
       "required": [

@@ -1,12 +1,13 @@
-package com.osrsdataexporter.datasource;
+package com.osrsdataexporter.datasource.itemcontainer;
 
 import com.osrsdataexporter.OsrsDataExporterConfig;
+import com.osrsdataexporter.datasource.ItemContainerDataSource;
 import com.osrsdataexporter.datasource.unpacker.ItemUnpackerRegistry;
 import com.osrsdataexporter.model.AccountContext;
 import com.osrsdataexporter.model.DataType;
-import com.osrsdataexporter.model.EquipmentItemEntry;
-import com.osrsdataexporter.model.EquipmentRecord;
-import com.osrsdataexporter.model.EquipmentStats;
+import com.osrsdataexporter.model.entry.EquipmentItemEntry;
+import com.osrsdataexporter.model.record.EquipmentRecord;
+import com.osrsdataexporter.model.entry.EquipmentStatsEntry;
 import com.osrsdataexporter.model.ExportPayload;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -64,7 +65,7 @@ public class EquipmentDataSource extends ItemContainerDataSource<EquipmentRecord
 			}
 
 			ItemComposition composition = client.getItemDefinition(id);
-			EquipmentStats stats = resolveStats(id, slot);
+			EquipmentStatsEntry stats = resolveStats(id, slot);
 
 			entries.add(new EquipmentItemEntry(
 				id,
@@ -80,7 +81,7 @@ public class EquipmentDataSource extends ItemContainerDataSource<EquipmentRecord
 		return entries;
 	}
 
-	private EquipmentStats resolveStats(int itemId, int slot)
+	private EquipmentStatsEntry resolveStats(int itemId, int slot)
 	{
 		ItemStats itemStats = itemManager.getItemStats(itemId);
 		if (itemStats == null || !itemStats.isEquipable())
@@ -94,6 +95,6 @@ public class EquipmentDataSource extends ItemContainerDataSource<EquipmentRecord
 			return null;
 		}
 
-		return EquipmentStats.from(eq, slot);
+		return EquipmentStatsEntry.from(eq, slot);
 	}
 }

@@ -1,18 +1,19 @@
-package com.osrsdataexporter.export;
+package com.osrsdataexporter.export.local;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
-import com.osrsdataexporter.model.ItemEntry;
+import com.osrsdataexporter.export.ExportType;
+import com.osrsdataexporter.model.entry.ItemEntry;
 import com.osrsdataexporter.model.AccountContext;
-import com.osrsdataexporter.model.BankRecord;
+import com.osrsdataexporter.model.record.BankRecord;
 import com.osrsdataexporter.model.ExportPayload;
-import com.osrsdataexporter.model.GroupStorageRecord;
-import com.osrsdataexporter.model.InventoryRecord;
-import com.osrsdataexporter.model.SkillEntry;
-import com.osrsdataexporter.model.SkillsRecord;
+import com.osrsdataexporter.model.record.GroupStorageRecord;
+import com.osrsdataexporter.model.record.InventoryRecord;
+import com.osrsdataexporter.model.entry.SkillEntry;
+import com.osrsdataexporter.model.record.SkillsRecord;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

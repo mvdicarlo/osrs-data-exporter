@@ -1,4 +1,4 @@
-package com.osrsdataexporter.model;
+package com.osrsdataexporter.model.entry;
 
 import lombok.Value;
 import net.runelite.client.game.ItemEquipmentStats;
@@ -8,7 +8,7 @@ import net.runelite.client.game.ItemEquipmentStats;
  * Values are sourced from {@code ItemEquipmentStats} via the RuneLite {@code ItemManager}.
  */
 @Value
-public class EquipmentStats
+public class EquipmentStatsEntry
 {
 	// Attack bonuses
 	int attackStab;
@@ -40,14 +40,14 @@ public class EquipmentStats
 	boolean twoHanded;
 
 	/**
-	 * Creates an {@code EquipmentStats} from a RuneLite {@link ItemEquipmentStats}.
+	 * Creates an {@code EquipmentStatsEntry} from a RuneLite {@link ItemEquipmentStats}.
 	 *
 	 * @param eq   the equipment stats returned by {@code ItemManager}
 	 * @param slot the equipment slot index the item occupies
 	 */
-	public static EquipmentStats from(ItemEquipmentStats eq, int slot)
+	public static EquipmentStatsEntry from(ItemEquipmentStats eq, int slot)
 	{
-		return new EquipmentStats(
+		return new EquipmentStatsEntry(
 			eq.getAstab(),
 			eq.getAslash(),
 			eq.getAcrush(),

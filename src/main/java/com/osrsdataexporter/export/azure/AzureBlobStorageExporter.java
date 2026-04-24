@@ -1,8 +1,10 @@
-package com.osrsdataexporter.export;
+package com.osrsdataexporter.export.azure;
 
 import com.google.gson.Gson;
+import com.osrsdataexporter.export.DataExporter;
+import com.osrsdataexporter.export.ExportType;
 import com.osrsdataexporter.model.ExportPayload;
-import com.osrsdataexporter.model.ExportRecord;
+import com.osrsdataexporter.model.record.ExportRecord;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
